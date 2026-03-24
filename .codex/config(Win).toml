@@ -1,0 +1,97 @@
+# --- model provider added by ZCF ---
+windows_wsl_setup_acknowledged = false
+model_provider = "Custom"
+model = "gpt-5.4(xhigh)"
+model_reasoning_effort = "xhigh"
+plan_mode_reasoning_effort = "xhigh"
+model_reasoning_summary = "auto" # 推理摘要展示级别；auto 交给客户端，none 完全关闭摘要。
+hide_agent_reasoning = false # 是否隐藏 reasoning 事件
+disable_response_storage = true
+preferred_auth_method = "apikey"
+personality = "pragmatic"
+# web_search = "live"
+# service_tier = "fast" # 请求服务档位
+
+# Windows使用git bash 作为默认 bash：添加系统路径 C:\Program Files\Git\bin\ 在最顶部覆盖系统默认的bash
+# developer_instructions = """
+# On Windows, prefer Git Bash for command execution.
+# Use exec_command with shell="bash" and login=false by default.
+# """
+
+notify = ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", "& { $j=$args[-1]; $t='Codex 通知'; $b='当前轮次已完成'; try { $o=$j|ConvertFrom-Json -ErrorAction Stop; if($null -ne $o -and $o.PSObject.Properties.Name -contains 'type' -and [string]$o.type -eq 'agent-turn-complete'){ $t='Codex 运行完成' }; if($null -ne $o -and $o.PSObject.Properties.Name -contains 'last-assistant-message'){ $m=[string]$o.'last-assistant-message'; if(-not [string]::IsNullOrWhiteSpace($m)){ $m=$m.Trim(); if($m.Length -gt 140){ $m=$m.Substring(0,140)+'...' }; $b=$m } }; if($b -eq '当前轮次已完成' -and $null -ne $o -and $o.PSObject.Properties.Name -contains 'type'){ $tp=[string]$o.type; if(-not [string]::IsNullOrWhiteSpace($tp)){ $b=$tp } } } catch { $b='turn-complete' }; [Windows.UI.Notifications.ToastNotificationManager,Windows.UI.Notifications,ContentType=WindowsRuntime]|Out-Null; $x=[Windows.UI.Notifications.ToastNotificationManager]::GetTemplateContent([Windows.UI.Notifications.ToastTemplateType]::ToastText02); $n=$x.GetElementsByTagName('text'); [void]$n.Item(0).AppendChild($x.CreateTextNode($t)); [void]$n.Item(1).AppendChild($x.CreateTextNode($b)); [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('Codex 通知').Show([Windows.UI.Notifications.ToastNotification]::new($x)) } --%"]
+[tui]
+notifications = true # ["approval-requested"]
+notification_method = "auto"  # 不稳定可改 "bel"
+# 使用 /statusline 交互配置，使用← →排序状态栏项
+status_line = ["model-with-reasoning", "current-dir", "git-branch", "context-remaining"]
+
+# --- 安全与执行 ---
+[profiles.auto-workspace]
+approval_policy = "never"  # never =不弹确认,想全自动建议开这个不会卡审批模型会自行换命令 , on-request =按上下文请求 ,untrusted =保守 ,on-failure =旧值 
+sandbox_mode = "workspace-write" # read-only、danger-full-access
+
+[windows]
+sandbox = "elevated"  # unelevated(非管理员)/elevated
+# 强制默认用这个 profile（防覆盖）
+default_profile = "auto-workspace"
+
+# --- 功能开关 ---
+[features]
+multi_agent = true
+fast_mode = true
+collaboration_modes = true
+unified_exec = true # 启用统一 PTY exec 工具
+shell_snapshot = true # 缓存 shell 环境快照；加速重复命令
+steer = true
+powershell_utf8 = true
+# shell_tool = true
+# search_tool = true # 启用 tool discovery / `search_tool_bm25`。
+
+[agents]
+max_threads = 5
+max_depth = 1
+
+[model_providers.Custom]
+base_url = "http://your url/v1"
+name = "Custom"
+requires_openai_auth = true
+wire_api = "responses"
+
+[mcp_servers.open-websearch]
+command = "cmd"
+args = ["/c", "npx", "-y", "open-websearch@latest"]
+env = {MODE = 'stdio', DEFAULT_SEARCH_ENGINE = 'duckduckgo', ALLOWED_SEARCH_ENGINES = 'duckduckgo,bing,brave', SYSTEMROOT = 'C:/WINDOWS'}
+startup_timeout_sec = 30
+
+[mcp_servers.mcp-deepwiki]
+command = "cmd"
+args = ["/c", "npx", "-y", "mcp-deepwiki@latest"]
+env = {SYSTEMROOT = 'C:/WINDOWS'}
+startup_timeout_sec = 30
+
+[mcp_servers.playwright]
+command = "cmd"
+args = ["/c", "npx", "-y", "@playwright/mcp@latest"]
+env = {SYSTEMROOT = 'C:/WINDOWS'}
+startup_timeout_sec = 30
+
+[mcp_servers.exa]
+command = "cmd"
+args = ["/c", "npx", "-y", "exa-mcp-server@latest"]
+env = {EXA_API_KEY = 'Your key', SYSTEMROOT = 'C:/WINDOWS'}
+startup_timeout_sec = 30
+
+[mcp_servers.augment-context-engine]
+command = "cmd"
+args = ["/c", "auggie", "--mcp","--mcp-auto-workspace"]
+env = {AUGMENT_API_TOKEN = "Your key",AUGMENT_API_URL = "https://acemcp.heroman.wtf/relay/"}
+startup_timeout_sec = 30  
+  
+[mcp_servers.serena]
+command = "cmd"
+args = ["/c", "uvx", "--from", "git+https://github.com/oraios/serena", "serena", "start-mcp-server", "--context", "codex", "--enable-web-dashboard", "false"]
+env = {SYSTEMROOT = 'C:/WINDOWS'}
+startup_timeout_sec = 30
+
+[notice.model_migrations]
+"gpt-5.2" = "gpt-5.4"
