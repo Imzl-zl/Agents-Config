@@ -1,3 +1,5 @@
+[![Linux.do 社区](https://cdn3.linux.do/original/4X/d/6/5/d65def8cc0c413f318bee2bcd1c774bc4ad109a8.png)](https://linux.do/ "访问 Linux.do 社区")
+
 # Agents Config
 
 一套用于 AI 编程助手（Claude Code / Codex）的项目协作与任务管理配置集合。
