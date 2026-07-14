@@ -2,78 +2,64 @@
 
 ## Language
 
-Default to Chinese in user-facing replies unless the user explicitly requests another language.
+- Default to Chinese in user-facing replies unless the user explicitly requests another language.
 
 ## Response Style
 
-Do not propose follow-up tasks or enhancement at the end of your final answer.
+- Be direct, practical, and candid. Treat the user as a competent collaborator.
+- Lead with the outcome, then include only the context needed to trust it.
+- For routine replies, prefer concise prose or up to 5 bullets. Use headers only when they improve scanning.
+- Do not add unrelated features, speculative follow-ups, broad rewrites, or end-of-answer enhancement suggestions.
 
-## Debug-First Policy (No Silent Fallbacks)
+## Collaboration
 
-- Do **not** introduce new boundary rules / guardrails / blockers / caps (e.g. max-turns), fallback behaviors, or silent degradation **just to make it run**.
-- Do **not** add mock/simulation fake success paths (e.g. returning `(mock) ok`, templated outputs that bypass real execution, or swallowing errors).
-- Do **not** write defensive or fallback code; it does not solve the root problem and only increases debugging cost.
-- Prefer **full exposure**: let failures surface clearly (explicit errors, exceptions, logs, failing tests) so bugs are visible and can be fixed at the root cause.
-- If a boundary rule or fallback is truly necessary (security/safety/privacy, or the user explicitly requests it), it must be:
-  - explicit (never silent),
-  - documented,
-  - easy to disable,
-  - and agreed by the user beforehand.
+- Understand intent with minimal prompting. If a low-risk assumption is available, state it briefly and proceed.
+- Ask for clarification only when missing information would materially change the result or create real risk.
+- Before multi-step tool work, send a short user-visible update that states the first step.
+- Stop once the user's core request is satisfied with enough evidence.
 
-## Engineering Quality Baseline
+## Debug-First Policy
+
+- Let failures surface clearly through explicit errors, logs, failing tests, or diagnostics.
+- Do not add silent fallbacks, mock success paths, broad error swallowing, or defensive guardrails just to make code run.
+- For bugs, trace the root cause before changing code. Prefer removing redundant gates, dead branches, and duplicate logic over adding bypasses.
+- If a boundary or fallback is required for security, safety, privacy, or explicit user request, make it explicit, documented, and easy to disable.
+
+## Engineering Quality
 
 - Follow SOLID, DRY, separation of concerns, and YAGNI.
-- Use clear naming and pragmatic abstractions; add concise comments only for critical or non-obvious logic.
-- Remove dead code and obsolete compatibility paths when changing behavior, unless compatibility is explicitly required by the user.
-- Consider time/space complexity and optimize heavy IO or memory usage when relevant.
-- Handle edge cases explicitly; do not hide failures.
+- Prefer short functions, shallow nesting, few parameters, early returns, and named constants instead of magic numbers.
+- Keep diffs targeted, but choose structural fixes when a small patch would preserve inconsistency or debt.
+- Remove dead code and obsolete compatibility paths when changing behavior unless compatibility is explicitly required.
+- Inject dependencies at boundaries; avoid hard-wiring concrete implementations into business logic.
+- Prefer immutable data flow: do not mutate parameters or global state when returning a new value is practical.
 
-## Code Metrics (Hard Limits)
+## Structural Fixes
 
-- **Function length**: 50 lines (excluding blanks). Exceeded  extract helper immediately.
-- **File size**: 300 lines. Exceeded  split by responsibility.
-- **Nesting depth**: 3 levels. Use early returns / guard clauses to flatten.
-- **Parameters**: 3 positional. More  use a config/options object.
-- **Cyclomatic complexity**: 10 per function. More  decompose branching logic.
-- **No magic numbers**: extract to named constants (`MAX_RETRIES = 3`, not bare `3`).
+Treat a task as structural when it touches duplicated business logic, multiple sources of truth, shared validation, permissions, routing, caching, API contracts, schemas, migrations, state synchronization, flaky tests, hidden fallbacks, repeated bug patterns, or security/data-integrity boundaries.
 
-## Decoupling & Immutability
+For structural work, identify the invariant that should hold, express it in one place, and remove obsolete logic instead of layering another condition around it.
 
-- **Dependency injection**: business logic never `new`s or hard-imports concrete implementations; inject via parameters or interfaces.
-- **Immutable-first**: prefer `readonly`, `frozen=True`, `const`, immutable data structures. Never mutate function parameters or global state; return new values.
+## Planning And Execution
 
-## Security Baseline
+- For trivial edits, proceed directly.
+- For non-trivial coding tasks, make a compact plan covering root cause, affected files, hotfix vs structural choice, approach, and validation.
+- Use parallel tools or agents when subtasks are independent; keep final decisions and code changes under the main agent's review.
+- Use available MCPs, browser tools, tests, and searches when they materially improve evidence quality. Do not optimize away useful verification.
 
-- Never hardcode secrets, API keys, or credentials in source code; use environment variables or secret managers.
-- Use parameterized queries for all database access; never concatenate user input into SQL/commands.
-- Validate and sanitize all external input (user input, API responses, file content) at system boundaries.
-- **Conversation keys  code leaks**: When the user shares an API key in conversation (e.g. configuring a provider, debugging a connection), this is normal workflow  do NOT emit "secret leaked" warnings. Only alert when a key is written into a source code file. Frontend display is already masked; no need to remind repeatedly.
+## Security
 
-## Testing and Validation
+- Never hardcode secrets, API keys, credentials, or tokens in source code.
+- Use environment variables or secret managers for sensitive configuration.
+- Use parameterized queries for database access; never concatenate external input into SQL or shell commands.
+- Validate and sanitize external input at system boundaries.
+- User-shared API keys in conversation are normal workflow. Warn only if a secret is written into source code.
 
-- Keep code testable and verify with automated checks whenever feasible.
-- When running backend unit tests, enforce a hard timeout of 60 seconds to avoid stuck tasks.
-- Prefer static checks, formatting, and reproducible verification over ad-hoc manual confidence.
+## Testing And Validation
 
-## Skills
-
-Skills are stored in `~/.codex/skills/` (personal) and optionally `.codex/skills/` (project-shared).
-
-Before starting a task:
-
-- Scan available skills.
-- If a skill matches, read its `SKILL.md` and follow it.
-- Announce which skill(s) are being used.
-- Prefer `taskmaster` by default for any task with 3+ ordered steps that produce file changes.
-
-Routing table:
-
-| Scenario | Skill | Trigger |
-|----------|-------|---------|
-| Multi-step task tracking / autonomous execution | `taskmaster` | 3+ ordered steps that produce file changes, or "track tasks", "make a plan", "track progress", "long task", "big project", "autonomous", "从零开始", "长时任务" |
-
-## Taskmaster Notes
-
-- `taskmaster` v5 supports `Single / Epic / Batch`; shape selection belongs in `SKILL.md`, not in this global file.
-- For homogeneous row-level batch work inside `taskmaster`, prefer `spawn_agents_on_csv`.
-- Keep task-tracking CSV and batch-worker CSV separated.
+- Keep code testable and verify changes with automated checks whenever feasible.
+- Backend unit tests must use a 60-second timeout.
+- After code changes, run the narrowest meaningful checks first: targeted tests, type/lint checks, build checks, then smoke tests when applicable.
+- For Chrome MCP smoke tests, starting a server is not evidence; perform a real browser/MCP action.
+- If validation cannot be run, state why and name the next best check.
+- Before finalizing, review the diff for symptom patches, duplicated logic, hidden fallbacks, broad catches, second sources of truth, dead code, unmentioned behavior changes, weak tests, and security regressions.
