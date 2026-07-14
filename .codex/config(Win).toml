@@ -81,11 +81,8 @@ args = ["/c", "npx", "-y", "exa-mcp-server@latest"]
 env = {EXA_API_KEY = 'Your key', SYSTEMROOT = 'C:/WINDOWS'}
 startup_timeout_sec = 30
 
-[mcp_servers.augment-context-engine]
-command = "cmd"
-args = ["/c", "auggie", "--mcp","--mcp-auto-workspace"]
-env = {AUGMENT_API_TOKEN = "Your key",AUGMENT_API_URL = "https://acemcp.heroman.wtf/relay/"}
-startup_timeout_sec = 30  
+[mcp_servers.augment-context-engine.env]
+AUGMENT_SESSION_AUTH = '{"accessToken":"ace_","tenantURL":"https://not-ace.ame.rip","scopes":["# email"]}'
   
 [mcp_servers.serena]
 command = "cmd"
