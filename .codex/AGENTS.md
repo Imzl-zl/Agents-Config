@@ -34,6 +34,18 @@
 - Inject dependencies at boundaries; avoid hard-wiring concrete implementations into business logic.
 - Prefer immutable data flow: do not mutate parameters or global state when returning a new value is practical.
 
+## Production Code Metrics
+
+- Treat 50-line functions, 3-level nesting, 3 parameters, and complexity 10 as refactoring signals for production code.
+- Treat 300 lines as a production source-file split signal, not a hard limit for process documentation.
+- Skills, STAGE files, design documents, and retained references have no hard line limit. Split them by responsibility and progressive disclosure; never delete constraints, examples, or readable spacing to satisfy a number.
+
+## Dev Workflow Routing
+
+- The integrated heavy workflow is explicit-only: start it with `/dev-workflow` when that workflow is intended.
+- Invoke it once. Its active orchestration frame reads supporting stages; users do not invoke stage commands.
+- Ordinary questions, explanations, and lightweight interactions must not be auto-captured by the heavy workflow.
+
 ## Structural Fixes
 
 Treat a task as structural when it touches duplicated business logic, multiple sources of truth, shared validation, permissions, routing, caching, API contracts, schemas, migrations, state synchronization, flaky tests, hidden fallbacks, repeated bug patterns, or security/data-integrity boundaries.

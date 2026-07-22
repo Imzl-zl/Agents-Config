@@ -53,51 +53,48 @@
 
 ---
 
-## 辅助组件
+## Dev Workflow 与参考源
 
-### 2. Taskmaster — 统一任务执行协议
+### 2. Dev Workflow — 当前融合运行实现
 
-**位置**：`.codex/skills/taskmaster/`
+**位置**：`.codex/skills-fork/`
 
-用于多步骤任务的跟踪和自主执行，支持三种任务形态：
+日常只需调用一次：
 
-| 形态 | 适用场景 | 真值文件 |
-|------|---------|---------|
-| **Single Task** | 单一交付物 | `TODO.csv` / `SPEC.md + TODO.csv + PROGRESS.md` |
-| **Epic Task** | 多交付物、有依赖链 | `EPIC.md + SUBTASKS.csv + PROGRESS.md` |
-| **Batch Task** | 同构行级批量工作 | `workers-input.csv + workers-output.csv` |
-
-**核心原则**：
-- 磁盘上的真值文件优于内存
-- 无显式验证不得标记完成
-- 支持冷启动恢复
-
-**触发词**：`跟踪任务`、`做个计划`、`从零开始`、`长时任务`、`自主执行` 等
-
----
-
-### 3. Todo List CSV — 轻量任务跟踪
-
-**位置**：`.codex/skills/todo-list-csv/`
-
-更简单的任务跟踪方式，在项目根目录创建 CSV 文件跟踪进度：
-
-```csv
-id,item,status,done_at,notes
-1,复现问题,IN_PROGRESS,,
-2,加回归测试,TODO,,
-3,修复实现,TODO,,
-4,运行测试/构建,TODO,,
+```text
+/dev-workflow
 ```
 
-**特点**：
-- 与 `update_plan` 双轨同步
-- 全部完成后自动删除 CSV
-- 提供自动化脚本 `scripts/todo_csv.py`
+v0.4 只暴露一个 `/dev-workflow` 入口，按 decision owner、UI mode 和全局 frontier 读取不可发现 stages。legacy 工作流完整保留为 REFERENCE；短任务使用 minimal state，跨会话设计在物化前使用 DESIGN，物化后由 SPEC/EPIC 接管真值。
 
-**触发条件**：需要修改项目且任务有多个可独立验收步骤
+详细说明：
+
+- [使用说明](.codex/skills-fork/README.md)
+- [设计理念](.codex/docs/skill-fusion-design.md)
+- [目录边界](.codex/README.md)
 
 ---
+
+### 3. Reference Skills — 改造前参考快照
+
+**位置**：`.codex/reference-skills/`
+
+| 快照 | 参考内容 | 运行状态 |
+|---|---|---|
+| `taskmaster/` | Compact/Full/Epic/Batch、恢复和 CSV 真值协议 | 不可发现，不调用 |
+| `todo-list-csv/` | 项目根 CSV、update_plan 同步与辅助脚本 | 不可发现，不调用 |
+
+这些文件保持原始语义，只用于阅读、比较和追溯。它们不属于 `.codex/skills/`，不在 dev-workflow plugin 的 `skills` 路径中，也不是 `/dev-workflow` 的依赖。
+
+其他上游参考源：
+
+- `superpowers/`：原版 Superpowers，Codex plugin marker 已禁用。
+- `skills/`：其他上游 skill 设计参考。
+
+参考源规则见 [`.codex/reference-skills/README.md`](.codex/reference-skills/README.md)。
+
+---
+
 
 ### 4. AGENTS.md — 全局 Agent 规则
 
@@ -110,16 +107,17 @@ id,item,status,done_at,notes
 | 语言 | 默认中文回复 |
 | 响应风格 | 不主动提议后续任务 |
 | Debug-First | 拒绝静默降级，让失败暴露 |
-| 工程质量 | SOLID、DRY、代码度量硬限制 |
+| 工程质量 | SOLID、DRY、生产代码度量与文档完整性 |
 | 安全基线 | 不硬编码密钥、参数化查询、输入校验 |
-| 技能路由 | 自动匹配并加载相关 Skill |
+| 技能路由 | 自动匹配相关能力；重型 `/dev-workflow` 显式启动 |
 
-**代码度量硬限制**：
+**生产代码度量约束**：
 - 函数长度：50 行
-- 文件大小：300 行
+- 生产代码文件：300 行作为拆分信号
 - 嵌套深度：3 层
 - 参数数量：3 个
 - 圈复杂度：10
+- Skill、设计文档和参考资料不设硬行数上限；按职责拆分，但不为行数删除必要内容
 
 ---
 
@@ -201,23 +199,24 @@ env = {AUGMENT_API_TOKEN = "Your key"}  # ← 改成你的 Token
 ### 1. 选择你的工具
 
 - **Claude Code 用户**：使用 `.claude/commands/init-project.md`
-- **Codex 用户**：使用 `.codex/` 下的全部文件
+- **Codex 用户**：按用途复制 `.codex/` 中的运行配置；参考快照可选保留
 
 ### 2. 复制配置
 
-将对应文件复制到你的项目或全局配置目录：
-
-```
+```text
 # Claude Code
 ~/.claude/commands/init-project.md
 
-# Codex
+# Codex 运行部分
 ~/.codex/
 ├── prompts/init-project.md
-├── skills/taskmaster/
-├── skills/todo-list-csv/
+├── skills-fork/                 # 当前 Dev Workflow plugin
+├── skills/init-project/         # 独立安装技能
 ├── AGENTS.md
-└── config.toml  # 重命名自 config(Win).toml 或 config(WSL).toml
+└── config.toml                  # 重命名自 config(Win).toml 或 config(WSL).toml
+
+# 可选参考资料，不参与运行
+~/.codex/reference-skills/
 ```
 
 ### 3. 在项目中初始化
@@ -233,35 +232,47 @@ env = {AUGMENT_API_TOKEN = "Your key"}  # ← 改成你的 Token
 
 ## 文件结构
 
-```
+```text
 Agents Config/
 ├── README.md
+├── superpowers/                      # 上游参考源；Codex plugin marker disabled
+├── skills/                           # 上游参考源
 ├── .claude/
-│   └── commands/
-│       └── init-project.md      # Claude Code 版本初始化命令
+│   └── commands/init-project.md
 └── .codex/
-    ├── prompts/
-    │   └── init-project.md      # Codex 版本初始化命令
-    ├── skills/
-    │   ├── taskmaster/          # 多步骤任务执行协议
-    │   │   ├── SKILL.md
-    │   │   └── assets/          # 模板文件
-    │   └── todo-list-csv/       # 轻量任务跟踪
-    │       ├── SKILL.md
-    │       └── scripts/
-    ├── AGENTS.md                # 全局 Agent 规则
-    ├── config(Win).toml         # Windows 配置
-    └── config(WSL).toml         # WSL 配置
+    ├── README.md                     # 运行/参考/文档边界
+    ├── prompts/init-project.md
+    ├── skills-fork/                  # Dev Workflow v0.4 plugin
+    │   ├── .codex-plugin/plugin.json
+    │   ├── dev-workflow/
+    │   │   ├── dev-workflow/         # 唯一可发现入口
+    │   │   ├── stages/               # supporting STAGE.md
+    │   │   └── <9 legacy references> # REFERENCE.md
+    │   └── README.md
+    ├── skills/                       # 真正安装/可发现的独立技能
+    │   ├── .system/
+    │   └── init-project/
+    ├── reference-skills/             # 不可发现的原始参考快照
+    │   ├── taskmaster/
+    │   ├── todo-list-csv/
+    │   └── README.md
+    ├── docs/skill-fusion-design.md   # 设计理念
+    ├── AGENTS.md
+    ├── config(Win).toml
+    └── config(WSL).toml
 ```
 
 ---
 
 ## 设计理念
 
-1. **真值在磁盘**：所有状态以文件形式持久化，支持冷启动恢复
-2. **最小骨架**：规则文件保持短、小、硬，不堆砌阶段性历史
-3. **Debug-First**：让失败暴露而非隐藏，从根因解决问题
-4. **无参数设计**：用户只需一个入口，复杂分支内部处理
+1. **单一入口**：只发现 `/dev-workflow`，stage 和 legacy reference 不进入 discovery
+2. **按决策分权**：业务、技术和 UI node 可分别设置 owner
+3. **按需状态**：Transient 使用 minimal state，复杂设计才启用完整 WorkflowState
+4. **单一真值切换**：pre-plan DESIGN 经验证 cutover 到 SPEC/EPIC，执行状态由对应 CSV 负责
+5. **参考源只读**：原始流程完整保留为 REFERENCE，不参与运行
+6. **文档完整优先**：文档不设 300 行硬限制，必要时按职责拆分
+7. **Debug-First**：失败保存 return point，从根因修复并用新鲜证据验证
 
 ---
 
