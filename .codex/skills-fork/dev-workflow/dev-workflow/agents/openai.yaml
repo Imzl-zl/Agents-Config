@@ -1,0 +1,5 @@
+interface:
+  display_name: "Dev Workflow"
+  short_description: "Route one request from idea to verified result"
+policy:
+  allow_implicit_invocation: false

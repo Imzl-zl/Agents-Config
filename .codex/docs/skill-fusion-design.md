@@ -1,0 +1,333 @@
+# Skill 融合工作流设计
+
+**状态：** v0.4 权威设计文档  
+**日期：** 2026-07-22  
+**实现入口：** [`.codex/skills-fork/`](../skills-fork/README.md)  
+**目录边界：** [`.codex/README.md`](../README.md)
+
+## 1. 背景
+
+原工作区同时存在 Superpowers、taskmaster、todo-list-csv、模型内置 plan 和多套 UI 设计方式。单独使用都有价值，同时启用会产生：
+
+1. 多个入口竞争。
+2. 用户不懂某领域时，模型仍把可查事实和设计问题逐项问回用户。
+3. 会话 plan、多个 CSV、SPEC/PROGRESS 同时争夺真值。
+4. UI 要么只能靠文字想象，要么每次都启动过重原型。
+5. 原 v0.2 把内部阶段注册成 model-invoked skill，但又要求它们返回 user-only router；宿主无法强制这个 re-entry。
+6. Mixed owner、prototype detour 和大而模糊设计缺少可恢复的决策依赖。
+
+## 2. 目标
+
+- 用户只需启动 `/dev-workflow` 一次。
+- 内部路由遵守宿主真实 invocation 规则。
+- 最终 runtime plugin 只发现一个 `dev-workflow` SKILL；legacy 内容完整保留为不可发现参考。
+- 模型默认使用代码、工具、文档和同类产品消除事实缺口。
+- 决策 owner 可按业务、技术、UI 等领域分别设置。
+- 严格 Owner/grill-me 路径保持一次一问、用户决策、明确共识。
+- UI 可通过视觉原型、文字讨论或既有设计直接推进。
+- 短任务不落盘；长设计和长执行都能恢复。
+- 任一范围只有一个状态真值。
+
+## 3. 非目标
+
+- 不替用户决定业务规则、安全边界或不可逆迁移。
+- 不强制每个任务创建 spec、CSV、Epic 或 HTML 原型。
+- 不同时运行 Superpowers 和 dev-workflow 两套默认编排。
+- 不把 prototype 直接升级为未经正式流程的生产实现。
+- 不把 supporting stage 暴露成额外 slash command。
+- 不用文件行数替代行为验证；Skill/设计文档不设 300 行硬上限。
+
+## 4. 核心设计
+
+### 4.1 一个 user-invoked skill，多个 supporting stages
+
+`/dev-workflow` 是唯一默认入口。它在一次 invocation 后保持为整个会话的 orchestration frame。
+
+内部阶段存为 `stages/<name>/STAGE.md`，没有 `SKILL.md`：
+
+- 入口根据条件按需读取一个 stage。
+- stage 返回 state delta。
+- 入口合并 delta、重算 frontier 和 readiness。
+- stage 不 invoke sibling，不重新 invoke `/dev-workflow`。
+
+这同时满足“单入口”和宿主约束：user-only skill 不需要被模型二次调用，内部 stage 也不会在工作流外误触发。
+
+九份 legacy 工作流完整保留为 `REFERENCE.md`。其历史 frontmatter 只是参考正文，文件名不进入 skill discovery；对应 Codex invocation metadata 已移除，因此不构成第二套用户入口。
+
+### 4.2 决策分权，而不是用户画像
+
+路由单位是当前 decision node。每个 node 只有一个 owner：
+
+- `model`：模型研究并决定当前节点。
+- `user`：用户通过 grilling 决定当前节点。
+
+`Assisted | Owner | Mixed` 描述 owner 分配方式，不是永久用户标签。
+
+部分 Owner 声明只覆盖点名领域，未点名领域默认 model-owned；只有全局所有权声明才把全部领域转为 user。已 ready node 的 owner 信号冲突时只问该节点一次。
+
+Assisted 中，模型解决事实、既定约定和明显优解；长期权衡、公开接口、存量数据、安全/隐私/资金、不可逆迁移以及未知资源约束转为 user-owned node。
+
+Owner 中，只有事实和已定结论可跳过。剩余真实 decision node 无论大小都必须一次一问，或先显式转为 owner=model；不能用“低风险”静默替用户回答。
+
+### 4.3 全局 frontier 保证 Mixed 一致性
+
+入口维护一棵全局 decision graph：
+
+- node 有稳定 id、domain、owner、question、depends_on 和 status。
+- 只有依赖关闭的 node 可以进入 ready frontier。
+- design-assist、grilling 和 prototype 只返回当前 node delta。
+- 局部领域完成不产生全局 plan/execute readiness。
+- 任一 user-owned branch 活跃时，全工作流每轮最多问用户一个问题。
+
+因此业务 Owner + UI Assisted、业务 Assisted + UI Owner 等组合不会丢失另一个领域，也不会同时塞给用户一批问题。
+
+### 4.4 事实自查，决策才问
+
+能从仓库、环境、配置、文档、官方资料和同类项目查到的事实由模型查。重大不等于必须问；如果项目事实已固定答案，继续提问只制造仪式感。
+
+模型默认只适用于 model-owned node。user-owned node 的任何真实选择都必须等待用户回答。
+
+### 4.5 共识是硬门
+
+只要本轮存在 user-owned decisions：
+
+1. 全部 design nodes 和 fog 关闭后，模型复述完整决策链、assumptions、rejected branches 和边界。
+2. 状态设为 `consensus: pending`。
+3. 用户明确确认后变为 `confirmed`。
+
+树关闭不等于共识确认。`pending` 时 readiness 仍为 `continue-design`。
+
+### 4.6 UI 是独立轴
+
+`Prototype-Assisted | Design-Owner | Direct | Text-Only` 与业务 owner 正交：
+
+- Prototype-Assisted：视觉证据可减少不确定性时做原型，owner 不自动改变。
+- Design-Owner：UI node 讨论优先，既有 owner 决定使用 grilling 或 design-assist。
+- Direct：已有稿件/设计系统时直接解决 UI nodes。
+- Text-Only：明确不做原型。
+
+UI mode 使用确定性信号优先级：已有终稿照稿实现为 Direct；明确不要原型为 Text-Only；明确先看原型/多版方案为 Prototype-Assisted；用户保留 UI owner 且要求逐项讨论、未要求原型时为 Design-Owner；Assisted 用户无法凭文字判断真实视觉问题时默认 Prototype-Assisted。只有冲突信号会改变成本时才问一次。mode 只决定证据/交互形式，不偷偷改变 owner。
+
+### 4.7 Prototype 是 parent node 的证据
+
+每个 prototype 必须有 `ParentDecisionId`、Question 和 SuccessSignal。返回 artifact、pending/answered、result、rejected。入口只更新 parent node 和 prototype state，不丢失其他领域状态，也不让 prototype 设置全局 readiness。
+
+真实导航、权限、数据密度会改变判断时使用项目 dev-only 集成原型；否则使用独立 HTML。两个宿主是条件分支，不是双默认。
+
+### 4.8 Fog discovery 是可执行循环
+
+大而模糊工作先确认 destination，再 breadth-first 映射：
+
+- 可准确表述的问题形成 node。
+- 已知在范围内、暂时说不清的问题留在 fog。
+- ready nodes 按 owner 走 research/design-assist/grilling/prototype。
+- 每个结果更新 graph 和 fog。
+
+只有 destination/成功标准、scope/non-goals/约束清楚，fog 和 nodes 清空，验证目标已知时才毕业。discovery 产生决定，不生产实现。
+
+### 4.9 持久化按恢复价值付费
+
+设计和执行分别只有一个真值：
+
+| 阶段 | 短工作 | 需要恢复 |
+|---|---|---|
+| Pre-plan Design | 会话 WorkflowState | `.tasks/<task>/DESIGN.md` |
+| Post-plan Design | SPEC/EPIC | PROGRESS 中的临时 `Design Drift` state |
+| Execute | 会话 plan | Durable `TODO.csv` / Epic 父子 CSV |
+
+DESIGN→SPEC/EPIC 是单次 cutover：候选工件核对期间 DESIGN 仍胜出且不能执行；核对通过后同次 finalization 删除 DESIGN，删除成功才切换真值。SPEC/EPIC 已存在后不重建 DESIGN，design-drift 在 PROGRESS 恢复，收敛后原地更新计划。
+
+冷启动在意图路由前恢复设计和执行。候选根来自显式 checkpoint、项目根 `.dev-workflow/config.yaml`，以及带 `.dev-workflow-root` marker 的 `.tasks/` / `.dev-workflow/tasks/`；无 marker 的非空根不自动采用。对同一 task，真值优先序为：DESIGN（即使候选 SPEC/EPIC 已存在）→ active Design Drift → CSV 非终态或 `FinalizationStatus` 为 active/pending-validation/pending-cleanup 的 Durable/Epic tracker。`complete` 且已归档/删除的 tracker 不再恢复。多个 task 无法唯一判定时只问一次。
+
+## 5. 总体架构
+
+```text
+user invokes /dev-workflow once
+  |
+  +-- resume DESIGN/drift/tracker --> hydrate truth --> prior node/task/phase
+  +-- answer/research/review ----------------------> stop
+  +-- bug ----------------> debug --return point---> prior phase
+  +-- executable plan -----------------------------> execute
+  +-- partial plan -------> readiness check --------> design|plan|execute
+  +-- idea/fog ------------------------------------> new WorkflowState
+                                                       |
+                                      global ready frontier
+                                       /       |       \
+                            model node     user node    evidence node
+                           design-assist    grilling      prototype
+                                       \       |       /
+                                         state delta
+                                             |
+                            continue-design | stop | transient | durable | epic
+                                             |
+                                      plan / TDD / execute
+                                             |
+                                          verify
+```
+
+## 6. WorkflowState
+
+权威字段：
+
+```text
+version
+goal / intent / phase / constraints
+decision_mode / owners{domain -> model|user} / ui_mode
+decisions{id, domain, owner, decision, reason}
+assumptions{id, domain, assumption, reversible}
+open_nodes{id, domain, owner, question, depends_on, status} / fog
+prototype{parent_id, status, artifact, result}
+current_node / awaiting
+return_point{phase, node, evidence_ref}
+consensus: not-required | pending | confirmed
+readiness: continue-design | stop | transient-execution | durable-plan | epic-plan
+task_root / next / checkpoint
+```
+
+每次等待用户、owner/prototype/debug/verification detour 和 stage return 前先更新 state。只有入口能设置 readiness；return point 在恢复原节点并合并成功后才清空。
+
+`return_point` 是单槽且 detour 不嵌套：非空时不得覆盖。当前 debugging/verification/design-drift 必须先返回、合并并恢复原 node，后续 detour 才能启动；detour 内发现的新失败作为当前 stage 的 evidence/gap 处理。
+
+Minimal 投影只含 `goal / intent / phase / readiness / next`，用于问答、评审和无需设计的 Transient。完整字段只在 Design/Discovery、prototype、跨会话或 detour 中启用；升级时再补齐。
+
+## 7. Stage 接口
+
+| Stage | 输入 | 局部输出 |
+|---|---|---|
+| design-assist | 完整 state + model node | resolved/new/pruned/ownership/prototype request |
+| grilling | 完整 state + user node | one question 或 user decision delta |
+| prototype | 完整 state + parent id + success signal | artifact/result/status |
+| writing-plans | settled state + durable/epic readiness | artifacts + plan-ready |
+| executing-plans | plan/tracker + task | task status/debug/design/verify request |
+| TDD | task + observable contract | Red/Green/Refactor evidence |
+| debugging | evidence + return_point | root cause/change/validation/return point |
+| verification | claim + acceptance + evidence + return_point | verified/not-verified + return target |
+
+stage 输出永远是局部 delta，不是新的全局 ledger。
+design-drift 必须重开受影响 nodes，并按全局规则使旧 consensus 失效；设计收敛、重新 recap（如需）和 planning 后才能恢复原 execution task。任何新增/重开 node 或 fog 都把 confirmed 重置为 pending（仍有 user-owned decisions）或 not-required（没有）；只改事实文字属于 fact drift。
+
+## 8. Readiness
+
+入口按顺序计算：
+
+1. nodes/fog 非空，或本轮存在 user-owned decisions 且 consensus != confirmed -> `continue-design`
+2. 只要求研究/评审/设计且交付满足 -> `stop`
+3. 单会话低风险 -> `transient-execution`
+4. 需要恢复、高风险或依赖较多 -> `durable-plan`
+5. 多 deliverable/依赖链 -> `epic-plan`
+
+Assisted 产生用户卡点时同样留在 continue-design。
+
+## 9. 执行数据模型
+
+### Durable
+
+```text
+.tasks/<task>/
+├── SPEC.md
+├── TODO.csv
+├── PROGRESS.md
+└── raw/        # 可选
+```
+
+```csv
+id,plan_ref,goal,boundary,related_files,sync_targets,depends_on,status,validation,completed_at,notes
+```
+
+`sync_targets` 覆盖 symbol、type、schema、route、config、migration、test、doc。计划影响面只是快照；执行必须重新做 references/search。
+
+### Epic
+
+父 `SUBTASKS.csv` 是协调真值，child `TODO.csv` 是子任务内部真值。父状态由 child truth 重算；不反向覆盖 child。
+
+### 状态
+
+```text
+TODO -> IN_PROGRESS -> DONE
+                   \-> FAILED -> IN_PROGRESS
+```
+
+DONE 必须有当前 validation 的新鲜证据。
+
+`PROGRESS.md` 的固定整体恢复字段为 `FinalizationStatus: active | pending-validation | pending-cleanup | complete`。它不复制任务状态：Durable `TODO.csv`、Epic 父子 CSV 仍分别是真值。所有行完成后先进入 pending-validation，验证通过后进入 pending-cleanup，清理结束才 complete。
+
+## 10. Invocation 与隔离
+
+- plugin 只发现 `dev-workflow/SKILL.md`；它同时设置 Claude `disable-model-invocation: true` 与 Codex `allow_implicit_invocation: false`。
+- explicit-only 是有意取舍：避免普通问答被重工作流接管。浅层 model router 无法调用 user-only 主入口，因此不新增第二入口。
+- 包括 TDD 在内的八个主线阶段是 `STAGE.md`，九份 legacy 工作流是 `REFERENCE.md`；两者都不参与 discovery。
+- taskmaster/todo-list-csv 和根目录 superpowers/skills 是上游参考。不得另行启用 Superpowers 与 dev-workflow 两个强入口。
+- 参考源不被运行时调用或修改。
+
+### 10.1 Batch 与任务命名空间
+
+Batch 不再是 shape：同质批量是 Durable/Epic 内的执行并行策略，不使用 `spawn_agents_on_csv`，也不因数量大强制 Epic。task root ownership 由 `<task_root>/.dev-workflow-root` marker 判定；自定义根由项目根 `.dev-workflow/config.yaml` 的 `version` + 项目内相对 `task_root` 声明。默认根不可采用且无 config 时才用 `.dev-workflow/tasks/`。无 marker 的非空根与 `.codex-tasks/` 只作显式采用/迁移候选，禁止静默复用或双写。
+
+### 10.2 文档规模
+
+300 行只可作为生产代码拆分信号。Skill、STAGE、设计和参考文档以语义完整、可发现和 progressive disclosure 为准，不设硬行数上限。
+
+## 11. 被否决方案
+
+### 模型可调用的内部 SKILL.md
+
+否决：只能靠 description 软门禁 active handoff，工作流外可能误触发；user-only router 也无法被 stage 二次调用。
+
+### 多个 user-invoked 命令接力
+
+否决：用户需要反复输入 planning/execution 命令，违背单入口。
+
+### Flat handoff
+
+只传 Decisions/Assumptions/Open blockers/UI result 无法恢复依赖、owner、UI mode、prototype parent 和 consensus。改为完整 WorkflowState + node delta。
+
+### 全局小白/大佬标签
+
+否决：用户在不同领域的专业度和控制偏好不同。
+
+### 所有 UI 默认 HTML
+
+否决：已有明确设计或局部修改时，原型成本高于信息收益。
+
+### 所有多步任务创建 CSV
+
+否决：复制模型计划并污染仓库；短任务没有恢复价值。
+
+### 两个默认插件同时启用
+
+否决：重名 skill 和两个强入口没有确定解析顺序。
+
+## 12. 验收场景
+
+1. “我什么都不懂，你先设计” -> Assisted；查事实和同类，仅重大卡点转 user。
+2. 业务 Owner + UI Prototype-Assisted -> Mixed，全局一次一问，prototype 不丢业务 state。
+3. 业务 Assisted + UI owner:user + Design-Owner -> 只让 UI nodes 走 grilling，不把全流程切换 owner。
+4. “不要原型” -> Text-Only。
+5. 只比较布局 -> parent node 和全局 frontier 关闭后 stop。
+6. Owner 领域小决策 -> 必须问或显式转 model，不静默默认。
+7. 全部 nodes 关闭但未确认 recap -> continue-design。
+8. 长 grilling / fog effort 中断 -> 新 session hydrate DESIGN.md，恢复 dependencies、owners、ui mode、prototype、consensus 和 return point。
+9. 设计/执行/验证 detour -> 保存 return point；design-drift 重开节点并重新 planning 后回原 task。
+10. 部分计划 -> readiness check，不直接执行。
+11. 短改动 -> Transient，无持久 CSV。
+12. 高风险/跨会话 -> Durable；多 deliverable -> Epic。
+13. 生产实现 -> TDD；throwaway prototype 排除。
+14. 完成声称 -> verification 使用新鲜证据。
+15. 运行 plugin discovery -> 只发现 `/dev-workflow`，legacy REFERENCE 不出现。
+16. Transient 小改 -> 只建立 minimal state，不生成空 decision graph。
+17. DESIGN cutover 中断 -> 删除前 DESIGN 仍胜出；SPEC 已存在后的 drift 只用 SPEC + PROGRESS。
+18. 冷启动有普通未完成 Durable/Epic -> 从 SPEC/EPIC + CSV + PROGRESS 恢复 execution。
+19. DESIGN 与候选 SPEC 并存 -> DESIGN 胜出并重建候选，不能直接执行。
+20. confirmed 后重开 node -> consensus 失效，重新 recap 前 continue-design。
+21. 同质批量 -> Durable/Epic 内受控并行，不出现 Batch 第四真值。
+22. 非空根无 `.dev-workflow-root` -> 不自动采用；按 config/fallback/一次询问处理。
+23. CSV 全 DONE 但 FinalizationStatus=pending-validation -> 恢复 final validation，不误判完成。
+## 13. 演进规则
+新增路由或 stage 前必须回答：
+1. 它解决的是新意图、新决策纪律，还是已有阶段实现细节？
+2. 能否作为 supporting stage 的条件分支，而不是新 skill？
+3. 是否会创建第二个状态真值？
+4. 是否会丢失 decision id、dependencies、owner、UI mode、consensus 或 return point？
+5. 是否把可查事实重新问给用户？
+6. 是否有失败场景证明当前设计不足？
+不能明确回答时不新增 skill。入口保持唯一，stage 保持局部，状态保持单一。
