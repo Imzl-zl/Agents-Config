@@ -96,9 +96,7 @@ A 与 B 是有条件的选择，不是两个同时生效的默认。
 
 ```text
 ParentDecisionId: Dn
-Winner: [A/B/C/组合/全部否决]
-Why: [决定依据]
-Borrowed parts: [从其他变体采用的部件]
+Result: [胜出方向 A/B/C/组合/全部否决 + 决定依据 + 从其他变体借用的部件]
 Rejected: [不采用的方向和原因]
 PrototypeStatus: pending | answered
 StageStatus: awaiting-user | node-resolved

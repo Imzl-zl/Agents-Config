@@ -55,7 +55,7 @@ TODO → IN_PROGRESS → DONE
 
 ## 每个任务的执行循环
 
-1. 选择第一个依赖已满足的 `TODO` 或可重试 `FAILED`。
+1. 重读磁盘真值（Durable 读 `TODO.csv`；Epic 读父 `SUBTASKS.csv` 与当前 child `TODO.csv`），再选择第一个依赖已满足的 `TODO` 或可重试 `FAILED`；不凭记忆中的行状态开工。
 2. 标记 `IN_PROGRESS`，同步磁盘真值和会话 plan。
 3. 永久生产功能、bugfix、refactor 或行为变化在写实现代码前读取 `../test-driven-development/STAGE.md`，按 Red-Green-Refactor 执行；throwaway prototype 不加载。
 4. 按 boundary 实现，不做与目标无关的清理。
@@ -93,7 +93,7 @@ TODO → IN_PROGRESS → DONE
 当一个 TODO 开始承载多个独立 deliverable 或依赖链时，升级不搬目录：`task_dir` 是 child 位置的唯一真值，既有 Durable 留在原位。
 
 1. 创建父 `EPIC.md`、`SUBTASKS.csv`、`PROGRESS.md`，父 PROGRESS 写 `FinalizationStatus: active`。
-2. 在父 `SUBTASKS.csv` 为既有 Durable 写协调行：`task_dir` 相对父 epic 目录解析（升级 child 通常为 `../<原任务目录>`，允许 `../` 但不得指向 task_root 之外），复制原目标、依赖和当前状态；child 的 TODO 行状态、`plan_ref`、SPEC、PROGRESS 和 raw 资料原样不动。
+2. 在父 `SUBTASKS.csv` 为既有 Durable 写协调行：`task_dir` 相对父 epic 目录解析（升级 child 通常为 `../<原任务目录>`，允许 `../` 但不得指向 task_root 之外），复制原目标、依赖和当前状态；child 的 TODO 行状态、SPEC、PROGRESS 和 raw 资料原样不动。
 3. 在该 child 的 `PROGRESS.md` 恢复区加一行 `Parent: <父 epic 相对路径>`；冷启动据此把它当作 child，从父 `SUBTASKS.csv` 恢复，而不是独立 task。
 4. 将剩余 deliverable 建成新 child（默认放在 `.tasks/<epic>/tasks/<child>/`），声明 `depends_on`；新 child 从 `TODO` 开始，其 PROGRESS 写 `FinalizationStatus: active` 和 `Parent:`。
 5. 按父子状态重算规则初始化父 `SUBTASKS.csv` 与父 `PROGRESS.md`；父 CSV 成为协调真值，child TODO.csv 仍是各 child 内部真值。
@@ -125,3 +125,17 @@ Next: 一个明确动作
 5. 未被用户要求时不自行 commit、push 或创建 PR；工作在独立分支/worktree 上或用户要求收尾时，读取 `../finishing-a-development-branch/STAGE.md` 呈现收尾选项并执行用户选择。
 6. 项目已有 memory/archive 约定时，将关键决策、根因和坑点写入该位置；没有约定但本次产生了可复用的领域决策或坑点时，问一次是否创建轻量沉淀文件（如 `docs/DECISIONS.md`），用户拒绝则本 effort 内不再问。`SPEC.md` / `EPIC.md` 是否保留遵循项目文档约定；清理临时 raw 和无价值恢复信息。
 7. Transient 确认会话 plan 全部 completed 后结束。Durable/Epic 还要确认 CSV 没有未完成/失败行且 cleanup 已结束，设置 `FinalizationStatus: complete`；只有此后才可删除临时 `TODO.csv` / `SUBTASKS.csv`。`complete` 的 PROGRESS 可按项目归档约定保留或删除。
+
+## 输出 delta
+
+每次把控制权交回编排 frame 时返回：
+
+```text
+TaskDelta: 本轮更新的任务行/子任务状态与关键 notes
+Evidence: 最新 validation 命令与结果
+ReturnPhase / ReturnNode: debug-required、design-drift、verification-required 时必填（execute + 当前 task id）
+StageStatus: finalization-complete | debug-required | design-drift | verification-required | awaiting-user | blocked
+Next: 对编排器的一个建议动作
+```
+
+本 stage 不设置全局 readiness；`finalization-complete` 后由编排器结束 effort 或继续剩余工作。

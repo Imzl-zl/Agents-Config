@@ -8,11 +8,11 @@
 ```text
 Symptom: 可复现的失败
 Evidence: 命令、输出、stack trace 或观察
-ReturnPhase: discovery | design | prototype | plan | execute | verify
+ReturnPhase: route | discovery | design | prototype | execute | verify
 ReturnNode: decision id | prototype parent id | task id | validation id
 ```
 
-debug 不设置全局 `Readiness`。设计/原型中的失败解决后回原 decision node；执行失败回原 task；只有顶层 bug 修复请求继续执行路径。
+debug 不设置全局 `Readiness`。设计/原型中的失败解决后回原 decision node；执行失败回原 task；顶层 bug 请求（debug 即主线，无先行阶段）`ReturnPhase` 写 `route`、`ReturnNode` 留空，修复后按意图路由继续执行路径。
 
 ## 核心原则
 

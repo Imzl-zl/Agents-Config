@@ -73,7 +73,7 @@ skill 目录 `skills/zhanggui/` 是自包含的可移植单元，无需构建：
 - 用户只在开始时调用一次 `/zhanggui`；explicit-only 是为了避免普通问答被重工作流自动接管。
 - 不增加浅层 auto-router：model-invoked router 无法调用 user-only 主入口，只会制造第二套编排。
 - 入口保持为整个会话的 orchestration frame，按需读取一个 `STAGE.md`；stage 返回 delta，不 invoke 自己或 sibling。
-- `stages/`、`RECOVERY.md` 和 `REFERENCE.md` 都不参与 skill discovery。
+- `stages/` 与 `RECOVERY.md` 都不参与 skill discovery。
 
 ## 核心概念地图
 
@@ -118,4 +118,4 @@ v0.4 默认根仍为 `.tasks/`。不存在/空目录可采用并创建 `.zhanggu
 
 ## 验收场景
 
-23 条权威验收场景见 [设计文档 §12](docs/skill-fusion-design.md)。建议的冒烟子集（先跑这 5 条）：Assisted 冷启动、Mixed 一次一问、prototype detour 合并、design-drift、冷启动恢复。
+30 条权威验收场景见 [设计文档 §12](docs/skill-fusion-design.md)。建议的冒烟子集（先跑这 5 条）：Assisted 冷启动、Mixed 一次一问、prototype detour 合并、design-drift、冷启动恢复。

@@ -68,7 +68,6 @@ ReturnPhase / ReturnNode: 从执行调用时必填
 ```text
 Strengths: 做得好的具体点（帮助校准其余反馈的可信度）
 Findings: [{severity: critical|important|minor, file:line, what, why, fix}]
-Verdict: approve | fix-required
 ReturnPhase / ReturnNode: 原样返回
 StageStatus: review-passed | fixes-required | blocked
 ```
