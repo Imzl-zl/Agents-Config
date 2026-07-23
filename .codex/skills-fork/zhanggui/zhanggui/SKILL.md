@@ -11,10 +11,10 @@ disable-model-invocation: true
 ## 宿主调用契约
 
 - 本文件是唯一默认 user-invoked 入口，目录名和 frontmatter 名都为 `zhanggui`。
-- 进入阶段时只读取对应的 `../stages/<stage>/STAGE.md`；阶段结束时返回 state delta，由当前编排 frame 合并。task-root 采用与冷启动恢复细则在需要时读取同目录 `RECOVERY.md`，不常驻。
+- 进入阶段时只读取对应的 `stages/<stage>/STAGE.md`；阶段结束时返回 state delta，由当前编排 frame 合并。task-root 采用与冷启动恢复细则在需要时读取同目录 `RECOVERY.md`，不常驻。
 - “返回编排器”表示继续执行已加载的本文件，绝不再次 invoke `/zhanggui`，也不要求用户输入下一条 slash command。
 - stage 不直接调用 sibling stage；它只能返回 `StageStatus` 和下一阶段建议，实际路由由本编排器决定。
-- fork 内其他目录的 `REFERENCE.md` 是保留的设计参考，不是 slash command，也不参与运行。
+- 设计仓库内保留的 `REFERENCE.md` 只是设计参考，不是 slash command，也不参与运行；它们位于本 skill 目录之外，裸复制安装时不携带。
 - `.codex/reference-skills/` 和根目录上游源码同样只读，不参与运行。
 - explicit-only 是有意取舍：重工作流不会吞掉普通问答；用户需要在开始时调用一次 `/zhanggui`。不增加无法调用 user-only 入口的浅层 auto-router。
 
@@ -214,7 +214,7 @@ Owner/grill-me 领域内只能跳过：
 
 ## Prototype detour
 
-进入 prototype 时读取 `../stages/prototype/STAGE.md`，并传入完整 WorkflowState、`ParentDecisionId`、Question 和 Success signal。返回字段契约以该 stage 文档为准，本文件不复制 schema。
+进入 prototype 时读取 `stages/prototype/STAGE.md`，并传入完整 WorkflowState、`ParentDecisionId`、Question 和 Success signal。返回字段契约以该 stage 文档为准，本文件不复制 schema。
 
 编排器把返回 delta 合并回 parent node，保留其他领域 state：`pending` 继续等待同一视觉决定；`answered` 只表示证据已形成——parent 为 `owner: model` 时可据此关闭，为 `owner: user` 时必须保留为 ready，直到用户明确确认；`blocked` 表示问题本身不清，先澄清 Question/SuccessSignal 再重新进入。只有全局请求本来就是 visual-only 且没有其他 open node 时，编排器才设置 `Readiness: stop`。
 
@@ -240,18 +240,18 @@ Owner/grill-me 领域内只能跳过：
 
 | 条件 | Supporting stage |
 |---|---|
-| model-owned 设计节点 | `../stages/design-assist/STAGE.md` |
-| user-owned 设计节点 | `../stages/grilling/STAGE.md` |
-| 可运行证据能消除一个设计问题 | `../stages/prototype/STAGE.md` |
-| Durable/Epic 计划物化 | `../stages/writing-plans/STAGE.md` |
-| Transient/Durable/Epic 执行 | `../stages/executing-plans/STAGE.md` |
-| 永久生产代码功能/修复 | `../stages/test-driven-development/STAGE.md`，在实现代码前读取 |
-| bug、测试/构建失败、异常 | `../stages/systematic-debugging/STAGE.md` |
-| 任何完成或修复声称 | `../stages/verification-before-completion/STAGE.md` |
-| 完成门审查、任务级审查或用户请求代码评审 | `../stages/code-review/STAGE.md` |
-| verification 通过后需要 merge/PR/分支收尾 | `../stages/finishing-a-development-branch/STAGE.md` |
-| 执行前需要隔离工作区 | `../stages/using-git-worktrees/STAGE.md` |
-| 独立子任务/多个独立失败的并行派发 | `../stages/dispatching-parallel-agents/STAGE.md` |
+| model-owned 设计节点 | `stages/design-assist/STAGE.md` |
+| user-owned 设计节点 | `stages/grilling/STAGE.md` |
+| 可运行证据能消除一个设计问题 | `stages/prototype/STAGE.md` |
+| Durable/Epic 计划物化 | `stages/writing-plans/STAGE.md` |
+| Transient/Durable/Epic 执行 | `stages/executing-plans/STAGE.md` |
+| 永久生产代码功能/修复 | `stages/test-driven-development/STAGE.md`，在实现代码前读取 |
+| bug、测试/构建失败、异常 | `stages/systematic-debugging/STAGE.md` |
+| 任何完成或修复声称 | `stages/verification-before-completion/STAGE.md` |
+| 完成门审查、任务级审查或用户请求代码评审 | `stages/code-review/STAGE.md` |
+| verification 通过后需要 merge/PR/分支收尾 | `stages/finishing-a-development-branch/STAGE.md` |
+| 执行前需要隔离工作区 | `stages/using-git-worktrees/STAGE.md` |
+| 独立子任务/多个独立失败的并行派发 | `stages/dispatching-parallel-agents/STAGE.md` |
 
 Transient 直接进入 execution stage；Durable/Epic 先进入 planning stage。执行 stage 对永久生产功能和 bugfix 必须在写实现前加载 TDD stage；throwaway prototype 不加载。
 

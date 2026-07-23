@@ -35,27 +35,36 @@
 .codex/skills-fork/
 ├── .codex-plugin/plugin.json
 ├── README.md
-└── zhanggui/                 # plugin skills root
-    ├── zhanggui/             # 唯一可发现入口
+└── zhanggui/                     # plugin skills root
+    ├── zhanggui/                 # 唯一可发现入口 = 自包含可移植 skill
     │   ├── SKILL.md
     │   ├── RECOVERY.md           # task-root 与冷启动细则，按需读取
-    │   └── agents/openai.yaml
-    ├── stages/                   # supporting docs，不参与 discovery
-    │   ├── design-assist/STAGE.md
-    │   ├── grilling/STAGE.md
-    │   ├── prototype/{STAGE,UI,LOGIC}.md
-    │   ├── writing-plans/STAGE.md
-    │   ├── executing-plans/STAGE.md
-    │   ├── test-driven-development/STAGE.md
-    │   ├── systematic-debugging/STAGE.md
-    │   ├── verification-before-completion/STAGE.md
-    │   ├── code-review/{STAGE,code-reviewer}.md
-    │   ├── finishing-a-development-branch/STAGE.md
-    │   ├── using-git-worktrees/STAGE.md
-    │   └── dispatching-parallel-agents/STAGE.md
-    └── <9 个 legacy reference>/ # legacy 参考（含适配注记），不可发现
+    │   ├── agents/openai.yaml    # Codex policy；Claude 侧由 frontmatter 承担
+    │   └── stages/               # supporting docs，不参与 discovery
+    │       ├── design-assist/STAGE.md
+    │       ├── grilling/STAGE.md
+    │       ├── prototype/{STAGE,UI,LOGIC}.md
+    │       ├── writing-plans/STAGE.md
+    │       ├── executing-plans/STAGE.md
+    │       ├── test-driven-development/STAGE.md
+    │       ├── systematic-debugging/STAGE.md
+    │       ├── verification-before-completion/STAGE.md
+    │       ├── code-review/{STAGE,code-reviewer}.md
+    │       ├── finishing-a-development-branch/STAGE.md
+    │       ├── using-git-worktrees/STAGE.md
+    │       └── dispatching-parallel-agents/STAGE.md
+    └── <9 个 legacy reference>/ # legacy 参考（含适配注记），不可发现，不随裸复制分发
         └── REFERENCE.md
 ```
+
+### 两种安装形态（同一份文件）
+
+skill 目录 `zhanggui/zhanggui/` 是自包含的可移植单元，无需构建：
+
+1. **插件形态**：宿主加载 `.codex-plugin/plugin.json`（skills root 指向 `./zhanggui/`）。
+2. **裸 skill 形态**：把 `zhanggui/zhanggui/` 整个文件夹复制到宿主 skills 目录（`~/.claude/skills/zhanggui/`、`~/.agents/skills/zhanggui/` 或 Codex 对应目录）即可用 `/zhanggui`。
+
+不会全量加载：Agent Skills 是三级渐进加载——启动只注入 frontmatter 的 name/description 一两行；调用 `/zhanggui` 时才加载 SKILL.md 正文；`stages/` 与 `RECOVERY.md` 只有被导航表按需 Read 才进上下文。这也是官方大型 skill 的标准组织方式。同一 skill 不要以两种形态同时启用。
 
 ### 宿主调用模型
 
@@ -67,7 +76,7 @@
 
 ## 核心概念地图
 
-规则原文只在右列出处维护，此表只是索引：
+规则原文只在右列出处维护（`stages/...` 相对 skill 目录 `zhanggui/zhanggui/`），此表只是索引：
 
 | 概念 | 一句话 | 规则出处 |
 |---|---|---|
@@ -102,7 +111,7 @@
 - `using-git-worktrees`
 - `writing-skills`
 
-这些目录保留 `REFERENCE.md` 供设计比较；其中 brainstorming、using-superpowers、subagent-driven-development、dispatching-parallel-agents 含少量 zhanggui 适配注记，其余接近上游原文。每份文件在正文前有 inert marker，因此历史 frontmatter 不是文件首部，也不会被 skill loader 解析。对应 `agents/openai.yaml` 已移除，所以它们不是 slash command。
+这些目录保留 `REFERENCE.md` 供设计比较；其中 brainstorming、using-superpowers、subagent-driven-development、dispatching-parallel-agents 含少量 zhanggui 适配注记，其余接近上游原文。每份文件在正文前有 inert marker，因此历史 frontmatter 不是文件首部，也不会被 skill loader 解析。对应 `agents/openai.yaml` 已移除，所以它们不是 slash command。它们位于 skill 目录之外，不随裸复制分发。
 
 其中 4 份能力已提升为按需加载的运行 stage：requesting/receiving-code-review 融合为 `stages/code-review/`；finishing-a-development-branch、using-git-worktrees、dispatching-parallel-agents 各有对应 stage。REFERENCE 原文继续留存对比。subagent-driven-development 保持 reference——整体移植会创建第二套执行真值（违反设计文档演进规则 3），其"每任务审查 + 派发"理念已并入 code-review 与 dispatching 两个 stage。brainstorming、using-superpowers 被入口的设计路由取代。`brainstorming/scripts/` 的 server 方案只属于 legacy 参考——运行时 UI 原型使用 `stages/prototype/UI.md` 的无 server `?variant=` 方案。根目录 `superpowers/`、`skills/` 以及 `.codex/reference-skills/` 同样只读，不参与运行。
 

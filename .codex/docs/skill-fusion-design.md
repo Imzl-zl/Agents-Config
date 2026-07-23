@@ -266,6 +266,7 @@ DONE 必须有当前 validation 的新鲜证据。
 ## 10. Invocation 与隔离
 
 - plugin 只发现 `zhanggui/SKILL.md`；它同时设置 Claude `disable-model-invocation: true` 与 Codex `allow_implicit_invocation: false`。
+- skill 目录自包含（`stages/`、`RECOVERY.md` 在其内部）：同一份文件既作插件安装，也可整体复制到宿主 skills 目录作裸 skill 使用。Agent Skills 的三级渐进加载（启动只注入 frontmatter → 调用才加载 SKILL.md 正文 → 支撑文件按需 Read）保证未路由的 stage 不进上下文；两种形态不得同时启用。
 - explicit-only 是有意取舍：避免普通问答被重工作流接管。浅层 model router 无法调用 user-only 主入口，因此不新增第二入口。
 - 包括 TDD 在内的十二个主线阶段是 `STAGE.md`，九份 legacy 工作流是 `REFERENCE.md`；两者都不参与 discovery。
 - taskmaster/todo-list-csv 和根目录 superpowers/skills 是上游参考。不得另行启用 Superpowers 与 zhanggui 两个强入口。

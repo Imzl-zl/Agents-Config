@@ -245,8 +245,7 @@ Agents Config/
     ├── skills-fork/                  # Zhanggui v0.4 plugin
     │   ├── .codex-plugin/plugin.json
     │   ├── zhanggui/
-    │   │   ├── zhanggui/         # 唯一可发现入口
-    │   │   ├── stages/               # supporting STAGE.md
+    │   │   ├── zhanggui/         # 唯一可发现入口；自包含（内含 stages/）
     │   │   └── <9 legacy references> # REFERENCE.md
     │   └── README.md
     ├── skills/                       # 真正安装/可发现的独立技能

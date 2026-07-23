@@ -7,8 +7,7 @@
 ├── skills-fork/                  # Zhanggui v0.4 plugin
 │   ├── .codex-plugin/
 │   ├── zhanggui/             # plugin skills root
-│   │   ├── zhanggui/         # 唯一可发现 SKILL + Codex policy
-│   │   ├── stages/               # supporting STAGE.md，不可发现
+│   │   ├── zhanggui/         # 唯一可发现 SKILL；自包含（内含 stages/、RECOVERY.md、Codex policy）
 │   │   └── <9 legacy references> # REFERENCE.md，不可发现
 │   └── README.md
 ├── skills/                       # 真正安装/可发现的独立技能
@@ -30,7 +29,8 @@
 ## 运行规则
 
 - 日常融合流程只调用 `/zhanggui`；这是 plugin 唯一可发现 skill。
-- `stages/` 是 supporting docs，九个 legacy 目录是 REFERENCE，均不参与 discovery。
+- skill 目录内的 `stages/` 与 `RECOVERY.md` 是 supporting docs，九个 legacy 目录是 REFERENCE，均不参与 discovery。
+- skill 目录 `zhanggui/zhanggui/` 自包含，可整体复制到宿主 skills 目录作裸 skill 使用；两种形态不要同时启用。
 - explicit-only 防止普通问答自动进入重工作流；阶段切换仍由同一 frame 完成。
 - 短任务使用 minimal 会话状态；跨会话 pre-plan 设计使用 DESIGN，物化后由 SPEC/EPIC 接管，design-drift 写 PROGRESS。
 - `reference-skills/`、根目录 `superpowers/` 和根目录 `skills/` 不是运行依赖，只用于阅读、比较和追溯。
