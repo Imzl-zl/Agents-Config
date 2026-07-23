@@ -25,6 +25,8 @@ Trigger: completion-gate | per-task | ad-hoc | pre-merge
 ReturnPhase / ReturnNode: 从执行调用时必填
 ```
 
+本 stage 由执行循环或意图路由**同步调用**，不占用 detour 单槽：不写 `WorkflowState.return_point`，`awaiting` 保持不变；`ReturnPhase` / `ReturnNode` 只是原样回传的定位字段。
+
 ## 请求审查
 
 1. 确定 git 范围：`BASE_SHA` / `HEAD_SHA`（或当前工作区 diff）。

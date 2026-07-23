@@ -50,7 +50,7 @@ TODO → IN_PROGRESS → DONE
 - 任务开始时同步磁盘 CSV 与会话 plan。
 - `DONE` 必须有当前 `validation` 的新鲜证据。
 - 失败时保留 `IN_PROGRESS` 或标记 `FAILED`，在 notes 记录错误、已验证假设和下一策略。
-- 串行 Durable 同一时刻最多一个 `IN_PROGRESS`。
+- 串行 Durable 同一时刻最多一个 `IN_PROGRESS`；使用并行派发时允许多个写范围不冲突的行同时 `IN_PROGRESS`，但每行仍需独立 diff 与 validation 核实。
 - Epic 只有在写范围互不冲突、依赖已完成时才能并行多个子任务；并行派发按 `../dispatching-parallel-agents/STAGE.md` 执行，子代理结果必须经 diff 与 validation 核实，不信任报告。
 
 ## 每个任务的执行循环
@@ -118,8 +118,8 @@ Next: 一个明确动作
 
 所有任务完成后：
 
-1. Durable/Epic 把 `FinalizationStatus` 设为 `pending-validation`；Transient 不创建该字段。随后根据会话验收或 SPEC/EPIC final validation 运行整体 smoke、相关测试、lint 或 build，只运行能证明本次声称的完整检查。
-2. 命中 code-review 触发条件（安全、迁移、公开接口、存量数据、跨多文件、Epic child 完成、合并/交付前）时读取 `../code-review/STAGE.md`：Critical/Important findings 回任务循环修复并重跑对应 validation；`review-passed` 或按该 stage 规则记录跳过理由后才继续。
+1. 命中 code-review 触发条件（安全、迁移、公开接口、存量数据、跨多文件、Epic child 完成、合并/交付前）时读取 `../code-review/STAGE.md`：Critical/Important findings 重开或新增任务行回执行循环（此时 `FinalizationStatus` 仍为 `active`），修复并重跑对应 validation；`review-passed` 或按该 stage 规则记录跳过理由后才继续。
+2. Durable/Epic 把 `FinalizationStatus` 设为 `pending-validation`；Transient 不创建该字段。随后根据会话验收或 SPEC/EPIC final validation 运行整体 smoke、相关测试、lint 或 build，只运行能证明本次声称的完整检查。
 3. 返回 `StageStatus: verification-required` 和完整证据；编排 frame 读取 `../verification-before-completion/STAGE.md` 核对需求与证据。
 4. `not-verified` 记录 gaps 并回原 task/debug，Durable/Epic 保持 `pending-validation`；`verified` 恢复 execution 后，Durable/Epic 改为 `pending-cleanup`，Transient 继续完成会话交付。
 5. 未被用户要求时不自行 commit、push 或创建 PR；工作在独立分支/worktree 上或用户要求收尾时，读取 `../finishing-a-development-branch/STAGE.md` 呈现收尾选项并执行用户选择。
