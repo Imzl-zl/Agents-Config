@@ -16,10 +16,10 @@
 
 ## 只读约束
 
-1. 参考快照保持原始内容，不为适配 dev-workflow 修改 frontmatter、正文、脚本或模板。
-2. 需要复用理念时，先形成明确设计结论，再在 `.codex/skills-fork/dev-workflow/` 中重新实现。
+1. 参考快照保持原始内容，不为适配 zhanggui 修改 frontmatter、正文、脚本或模板。
+2. 需要复用理念时，先形成明确设计结论，再在仓库根 `zhanggui/` 中重新实现。
 3. 不把本目录加入 `.codex-plugin` 的 `skills` 路径。
 4. 不把参考目录移动回 `.codex/skills/`；该目录只存真正安装的技能。
-5. 参考文件中的 `.codex-tasks`、项目根 CSV 等路径只描述旧协议，不代表当前 dev-workflow 的运行行为。
+5. 参考文件中的 `.codex-tasks`、项目根 CSV 等路径只描述旧协议，不代表当前 zhanggui 的运行行为。
 
-当前融合实现与操作说明见 [`../skills-fork/README.md`](../skills-fork/README.md)。
+当前融合实现与操作说明见 [`../../zhanggui/README.md`](../../zhanggui/README.md)。

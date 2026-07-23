@@ -57,7 +57,7 @@
 
 ### 2. Zhanggui — 当前融合运行实现
 
-**位置**：`.codex/skills-fork/`
+**位置**：`zhanggui/`（仓库根独立项目）
 
 日常只需调用一次：
 
@@ -65,12 +65,12 @@
 /zhanggui
 ```
 
-v0.4 只暴露一个 `/zhanggui` 入口，按 decision owner、UI mode 和全局 frontier 读取不可发现 stages。legacy 工作流完整保留为 REFERENCE；短任务使用 minimal state，跨会话设计在物化前使用 DESIGN，物化后由 SPEC/EPIC 接管真值。
+v0.4 只暴露一个 `/zhanggui` 入口，按 decision owner、UI mode 和全局 frontier 读取不可发现 stages。上游能力已吸收为 12 个按需 stage；短任务使用 minimal state，跨会话设计在物化前使用 DESIGN，物化后由 SPEC/EPIC 接管真值。
 
 详细说明：
 
-- [使用说明](.codex/skills-fork/README.md)
-- [设计理念](.codex/docs/skill-fusion-design.md)
+- [使用说明](zhanggui/README.md)
+- [设计理念](zhanggui/docs/skill-fusion-design.md)
 - [目录边界](.codex/README.md)
 
 ---
@@ -210,7 +210,7 @@ env = {AUGMENT_API_TOKEN = "Your key"}  # ← 改成你的 Token
 # Codex 运行部分
 ~/.codex/
 ├── prompts/init-project.md
-├── skills-fork/                 # 当前 Zhanggui plugin
+├── skills/zhanggui/             # 掌柜 skill（复制自仓库 zhanggui/skills/zhanggui/）
 ├── skills/init-project/         # 独立安装技能
 ├── AGENTS.md
 └── config.toml                  # 重命名自 config(Win).toml 或 config(WSL).toml
@@ -237,17 +237,16 @@ Agents Config/
 ├── README.md
 ├── superpowers/                      # 上游参考源；Codex plugin marker disabled
 ├── skills/                           # 上游参考源
+├── zhanggui/                         # 掌柜 skill 项目（plugin + 可移植 skill + 设计文档）
+│   ├── .codex-plugin/plugin.json
+│   ├── README.md
+│   ├── docs/                         # skill-fusion-design.md + legacy 测试材料
+│   └── skills/zhanggui/              # 自包含 skill（SKILL.md + RECOVERY.md + stages/）
 ├── .claude/
 │   └── commands/init-project.md
 └── .codex/
-    ├── README.md                     # 运行/参考/文档边界
+    ├── README.md                     # 配置/参考边界
     ├── prompts/init-project.md
-    ├── skills-fork/                  # Zhanggui v0.4 plugin
-    │   ├── .codex-plugin/plugin.json
-    │   ├── zhanggui/
-    │   │   ├── zhanggui/         # 唯一可发现入口；自包含（内含 stages/）
-    │   │   └── <9 legacy references> # REFERENCE.md
-    │   └── README.md
     ├── skills/                       # 真正安装/可发现的独立技能
     │   ├── .system/
     │   └── init-project/
@@ -255,7 +254,6 @@ Agents Config/
     │   ├── taskmaster/
     │   ├── todo-list-csv/
     │   └── README.md
-    ├── docs/skill-fusion-design.md   # 设计理念
     ├── AGENTS.md
     ├── config(Win).toml
     └── config(WSL).toml
@@ -265,11 +263,11 @@ Agents Config/
 
 ## 设计理念
 
-1. **单一入口**：只发现 `/zhanggui`，stage 和 legacy reference 不进入 discovery
+1. **单一入口**：只发现 `/zhanggui`，stage 不进入 discovery
 2. **按决策分权**：业务、技术和 UI node 可分别设置 owner
 3. **按需状态**：Transient 使用 minimal state，复杂设计才启用完整 WorkflowState
 4. **单一真值切换**：pre-plan DESIGN 经验证 cutover 到 SPEC/EPIC，执行状态由对应 CSV 负责
-5. **参考源只读**：原始流程完整保留为 REFERENCE，不参与运行
+5. **参考源只读**：上游仓库以 gitignored 本地克隆保留（superpowers/、skills/），fork 期改造副本存于 git 历史，不参与运行
 6. **文档完整优先**：文档不设 300 行硬限制，必要时按职责拆分
 7. **Debug-First**：失败保存 return point，从根因修复并用新鲜证据验证
 

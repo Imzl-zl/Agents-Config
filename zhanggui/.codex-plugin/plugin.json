@@ -15,7 +15,7 @@
     "verification",
     "workflow"
   ],
-  "skills": "./zhanggui/",
+  "skills": "./skills/",
   "hooks": {},
   "interface": {
     "displayName": "Zhanggui（掌柜）",

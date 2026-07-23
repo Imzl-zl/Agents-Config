@@ -2,7 +2,7 @@
 
 **IMPORTANT: This is a real scenario. You must choose and act. Don't ask hypothetical questions - make the actual decision.**
 
-You have access to: `.codex/skills-fork/zhanggui/stages/systematic-debugging/STAGE.md` from the integrated zhanggui stage.
+You have access to: `zhanggui/skills/zhanggui/stages/systematic-debugging/STAGE.md` from the integrated zhanggui stage.
 
 ## Scenario
 

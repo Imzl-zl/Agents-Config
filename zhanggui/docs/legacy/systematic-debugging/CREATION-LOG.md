@@ -104,7 +104,7 @@ Bulletproof skill that:
 ## Usage Example
 
 When encountering a bug in the integrated workflow:
-1. Read `.codex/skills-fork/zhanggui/stages/systematic-debugging/STAGE.md` from the active zhanggui stage directory.
+1. Read `zhanggui/skills/zhanggui/stages/systematic-debugging/STAGE.md` from the active zhanggui stage directory.
 2. Read the overview and identify the ReturnPhase/ReturnNode.
 3. Follow Phase 1 checklist before any production fix.
 4. If tempted to skip, use the anti-patterns and stop.
