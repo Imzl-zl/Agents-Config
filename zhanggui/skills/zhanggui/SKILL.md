@@ -8,6 +8,16 @@ disable-model-invocation: true
 
 用户只调用一次 `/zhanggui`。本 skill 保持为整个会话的编排 frame；设计、原型、计划、执行、调试和验证只是按需读取的内部 stage 文档，不是可独立调用的 skill。
 
+## 核心纪律优先级
+
+本文件与各 stage 的规则发生冲突、或同一轮命中多条规则无法兼顾时，按下表小序号胜出裁决，不逐条权衡：
+
+1. **用户所有权**：user-owned decision 未经用户回答不得替用户决定；推荐只是信息，不是默认答案。user-owned 领域内拿不准是可查事实还是真实决策时，按决策处理。
+2. **单一真值**：任一范围只有一个状态真值；候选、镜像或会话记忆与真值分歧时以真值为准。
+3. **硬门**：存在 user-owned decisions 且 `consensus != confirmed` 时不得 planning/execute；无新鲜验证证据不得声称完成。
+4. **一次一问**：每轮等待最多一个用户问题；提问格式的完整性让位于节奏。
+5. **状态可恢复**：等待、detour 和落盘触发点前先更新 state；无法两全时，先保住可恢复性再继续推进。
+
 ## 宿主调用契约
 
 - 本文件是唯一默认 user-invoked 入口，目录名和 frontmatter 名都为 `zhanggui`。
@@ -72,7 +82,7 @@ checkpoint: session | <task_root>/<task>/DESIGN.md | <task_root>/<task>/PROGRESS
 
 - 问答、研究、评审和无需设计的 Transient 只保留 `goal`、`intent`、`phase`、`readiness`、`next`；不要填写空的 owner/UI/decision/prototype 字段。
 - idea、fog、design、prototype、跨会话工作和任何 detour 使用完整 WorkflowState。
-- Minimal 工作升级到设计或持久化时，必须在进入 stage 前补齐完整字段；不要提前让简单任务承担完整 state 成本。
+- 升级为完整 state 由机械触发点决定，不做软判断：新建 open_node 或 fog、写 return_point、写任何任务工件、phase 进入 design/discovery/prototype——任一动作执行前必须先补齐完整字段。不要提前让简单任务承担完整 state 成本。
 
 ### 跨会话设计检查点
 
@@ -227,13 +237,13 @@ Owner/grill-me 领域内只能跳过：
 
 `fog` 用于路径还看不清、无法直接形成完整决策树的工作：
 
-1. 先按当前 owner 规则确定 destination：最终要得到 spec、关键决定还是实际改动。
+1. 先按当前 owner 规则确定 destination：最终要得到 spec、关键决定还是实际改动；用户连 destination 都说不清时，先用开放问题逐轮收敛出 destination，再开始映射。
 2. breadth-first 扫描产品、架构、数据、安全、UI、资源和验证面；能准确表述的写成稳定 id 的 `open_nodes`，暂时说不清的写入 `fog`。
 3. `fog` 非空即满足机械落盘条件；在第一次等待用户前创建 `DESIGN.md`。
 4. 按全局 frontier 解决节点：事实研究走 model，价值决策走 user，纸上无法判断的单个节点走 prototype。
 5. 每个结果都更新 decisions、pruned/rejected branches、open_nodes 和 fog；新问题只有在可准确表述时才升级为 node。
 6. 同时满足以下条件才退出 discovery：destination/成功标准明确；scope/non-goals/约束明确；`fog` 为空；所有设计节点关闭；验证目标已知。
-7. 若 breadth-first 扫描证明任务实际很小，直接转普通 design/Transient，不创建长期地图。
+7. 若 breadth-first 扫描证明任务实际很小，直接转普通 design/Transient，不创建长期地图；已创建的 DESIGN.md 按用户意愿删除或保留，不遗留无主 checkpoint。
 
 发现循环只产生决定，不提前生产实现。
 
@@ -294,4 +304,5 @@ execution 返回 `design-drift` 时，确认 `return_point` 为空后写入 `{ p
 - 用户暂停时先写必要的 DESIGN/PROGRESS checkpoint，再退出。
 - 只有工具和仓库都无法提供、且会实质改变结果的信息才升级给用户。
 - 完成声称前必须读取 verification stage 并运行能证明目标的最新检查。
+- 用户明确放弃当前目标或方向大变时执行 scope reset：剪枝全部 `open_nodes` 和 `fog`，作废受影响的 decisions（不受影响的保留），按共识失效规则重置 `consensus`，再从新目标重新路由；已落盘的 DESIGN.md 按用户意愿删除或保留，不遗留无主 checkpoint。
 - 用户明确暂停、终止或切换其他工作时，先保存当前 checkpoint，再停止本编排 frame。

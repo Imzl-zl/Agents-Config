@@ -26,8 +26,8 @@
       "Write"
     ],
     "defaultPrompt": [
-      "Use /zhanggui to route and complete this request.",
-      "我有一个想法，请用 /zhanggui 先判断哪些由你决定、哪些需要问我。"
+      "我有一个想法，请用 /zhanggui 先判断哪些由你决定、哪些需要问我。",
+      "Use /zhanggui to route and complete this request."
     ],
     "brandColor": "#10B981",
     "screenshots": []

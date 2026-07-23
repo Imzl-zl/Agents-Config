@@ -118,4 +118,4 @@ v0.4 默认根仍为 `.tasks/`。不存在/空目录可采用并创建 `.zhanggu
 
 ## 验收场景
 
-32 条权威验收场景见 [设计文档 §12](docs/skill-fusion-design.md)。建议的冒烟子集（先跑这 5 条）：Assisted 冷启动、Mixed 一次一问、prototype detour 合并、design-drift、冷启动恢复。
+36 条权威验收场景见 [设计文档 §12](docs/skill-fusion-design.md)。建议的冒烟子集（先跑这 5 条）：Assisted 冷启动、Mixed 一次一问、prototype detour 合并、design-drift、冷启动恢复。

@@ -27,7 +27,7 @@
 - 没有磁盘 tracker 时，会话 plan 是唯一执行真值。
 - SPEC/EPIC 尚未创建时，`DESIGN.md` 是设计真值。
 - Cutover 时先生成候选 SPEC/EPIC、TODO/SUBTASKS 和 PROGRESS；覆盖核对完成前 DESIGN 仍胜出，禁止 yield 或执行候选计划。
-- 覆盖核对通过后，先把全部候选提交到最终路径并重新读取 schema、引用和覆盖结果；确认无需任何 post-delete 写入后，把删除 DESIGN 作为 finalization 的最后一次真值写操作。只有删除成功后 SPEC/EPIC 才成为设计真值、CSV 才成为状态真值。中断发生在删除前时，恢复必须以 DESIGN 为准并重建候选工件。
+- 覆盖核对通过后，把全部候选提交到最终路径并重新读取 schema、引用和覆盖结果，然后删除 DESIGN——删除是 finalization 的最后一次真值写操作，此后不得再有计划写入。只有删除成功后 SPEC/EPIC 才成为设计真值、CSV 才成为状态真值。中断发生在删除前时，恢复必须以 DESIGN 为准并重建候选工件。
 - SPEC/EPIC 已存在后不得重建 DESIGN。后续 design-drift 把未决 WorkflowState 写入 PROGRESS 的 `Design Drift` 区，稳定决定仍以 SPEC/EPIC 为准；重新收敛后由本 stage 原地更新 SPEC/EPIC 和受影响任务，再清除 drift 区。
 - 会话 plan 只投影 `goal` 和状态；与磁盘 CSV 分歧时以磁盘为准并立即重建镜像。
 
@@ -129,7 +129,7 @@ id,goal,task_type,depends_on,task_dir,status,validation,completed_at,notes
 7. 检查需求覆盖、依赖闭环、路径存在性、符号一致性和占位符。
 8. 吸收 DESIGN checkpoint（如有），生成候选工件并完成覆盖核对。
 9. 宿主有 subagent 能力时，按 [plan-document-reviewer-prompt.md](plan-document-reviewer-prompt.md) 模板派一个计划审查子代理复核候选工件（占位符映射：`PLAN_FILE_PATH` = 候选 TODO/SUBTASKS 与 SPEC/EPIC；`SPEC_FILE_PATH` = 当前设计真值 DESIGN 或既有 SPEC/EPIC）；无 subagent 能力时按其 What to Check 清单自查。`Issues Found` 在本阶段解决并重跑覆盖核对后才继续。
-10. 把全部候选提交到最终路径并重新读取验证；将删除 DESIGN 作为最后一次真值写操作。删除失败则保持 DESIGN 为真并返回 blocked；删除成功后不得再依赖 post-delete 写入才能执行。
+10. 把全部候选提交到最终路径并重新读取验证，然后删除 DESIGN；删除后不得再有计划写入。删除失败则保持 DESIGN 为真并返回 blocked。
 11. 返回 `StageStatus: plan-ready`、Shape、Truth、Artifacts 和第一条 dependency-ready task；不 invoke 入口或 execution stage。
 
 ## 失败条件
