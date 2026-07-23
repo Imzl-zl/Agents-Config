@@ -1,6 +1,6 @@
 # Academic Test: Systematic Debugging Skill
 
-You have access to the integrated dev-workflow debugging stage at `../STAGE.md`.
+You have access to the integrated zhanggui debugging stage at `.codex/skills-fork/zhanggui/stages/systematic-debugging/STAGE.md`.
 
 Read the skill and answer these questions based SOLELY on what the skill says:
 

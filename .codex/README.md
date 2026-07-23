@@ -4,10 +4,10 @@
 
 ```text
 .codex/
-├── skills-fork/                  # Dev Workflow v0.4 plugin
+├── skills-fork/                  # Zhanggui v0.4 plugin
 │   ├── .codex-plugin/
-│   ├── dev-workflow/             # plugin skills root
-│   │   ├── dev-workflow/         # 唯一可发现 SKILL + Codex policy
+│   ├── zhanggui/             # plugin skills root
+│   │   ├── zhanggui/         # 唯一可发现 SKILL + Codex policy
 │   │   ├── stages/               # supporting STAGE.md，不可发现
 │   │   └── <9 legacy references> # REFERENCE.md，不可发现
 │   └── README.md
@@ -29,7 +29,7 @@
 
 ## 运行规则
 
-- 日常融合流程只调用 `/dev-workflow`；这是 plugin 唯一可发现 skill。
+- 日常融合流程只调用 `/zhanggui`；这是 plugin 唯一可发现 skill。
 - `stages/` 是 supporting docs，九个 legacy 目录是 REFERENCE，均不参与 discovery。
 - explicit-only 防止普通问答自动进入重工作流；阶段切换仍由同一 frame 完成。
 - 短任务使用 minimal 会话状态；跨会话 pre-plan 设计使用 DESIGN，物化后由 SPEC/EPIC 接管，design-drift 写 PROGRESS。

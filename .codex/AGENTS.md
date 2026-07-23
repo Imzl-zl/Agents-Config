@@ -40,12 +40,12 @@
 - Treat 300 lines as a production source-file split signal, not a hard limit for process documentation.
 - Skills, STAGE files, design documents, and retained references have no hard line limit. Split them by responsibility and progressive disclosure; never delete constraints, examples, or readable spacing to satisfy a number.
 
-## Dev Workflow Routing
+## Zhanggui Routing
 
-- The integrated heavy workflow is explicit-only: start it with `/dev-workflow` when that workflow is intended.
+- The integrated heavy workflow is explicit-only: start it with `/zhanggui` when that workflow is intended.
 - Invoke it once. Its active orchestration frame reads supporting stages; users do not invoke stage commands.
 - Ordinary questions, explanations, and lightweight interactions must not be auto-captured by the heavy workflow.
-- Outside an active `/dev-workflow` frame, do not create task-tracking files (TODO/SPEC/PROGRESS/CSV or similar); use the built-in plan tool for ordinary planning. Persistent trackers belong to the workflow's task root.
+- Outside an active `/zhanggui` frame, do not create task-tracking files (TODO/SPEC/PROGRESS/CSV or similar); use the built-in plan tool for ordinary planning. Persistent trackers belong to the workflow's task root.
 
 ## Structural Fixes
 
