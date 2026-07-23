@@ -143,6 +143,12 @@ DESIGN→SPEC/EPIC 是单次 cutover：候选工件核对期间 DESIGN 仍胜出
 
 冷启动在意图路由前恢复设计和执行。候选根来自显式 checkpoint、项目根 `.zhanggui/config.yaml`，以及带 `.zhanggui-root` marker 的 `.tasks/` / `.zhanggui/tasks/`；无 marker 的非空根不自动采用。对同一 task，真值优先序为：DESIGN（即使候选 SPEC/EPIC 已存在）→ active Design Drift → CSV 非终态或 `FinalizationStatus` 为 active/pending-validation/pending-cleanup 的 Durable/Epic tracker。`complete` 且已归档/删除的 tracker 不再恢复。多个 task 无法唯一判定时只问一次。
 
+### 4.10 引导式提问与收敛循环
+
+所有向用户的决策问题统一为引导式格式：问题 + 研究背景（同类设计 > 官方指南 > 模型自身判断，无同类时标注）+ 2-4 个带差异的选项 + 明确推荐 + 自由输入出口。用户独有信息用开放问题，不硬造选项。格式随熟悉度伸缩：陌生领域（Assisted 卡点）用完整引导式，用户熟悉的 Owner 领域以开放问题 + 推荐为主、选项按需；格式只统一"怎么问"，不改变 owner 分权（问多少、谁决定）。
+
+用户自由输入是一等回答：明确决定关闭节点；想法/方向触发收敛循环——复述理解、补研究、更新选项后继续一次一问直到收敛，不受"仪式性追问限一次"约束。design-assist 转出的 user-owned 卡点必须把研究与选项预填进 node，grilling 复用不重做。
+
 ## 5. 总体架构
 
 ```text
@@ -342,6 +348,8 @@ Batch 不再是 shape：同质批量是 Durable/Epic 内的执行并行策略，
 28. 无领域声明的 "grill me"/"逐项问我" -> 视为全领域声明，全部领域 `owner:user` 逐项一次一问，不落入"未声明默认 model"。
 29. 用户带明确新目标冷启动且项目存在旧非终态 task -> 不为恢复提问，按新意图直接路由，首轮回复附一句可恢复提示。
 30. 整体验证 not-verified -> 恢复原 task 并清空 return point，后续 debug detour 可正常写入单槽，不死锁。
+31. Assisted 关键卡点转 user -> 问题带同类参考背景、2-4 个选项、明确推荐与自由输入出口；grilling 复用 design-assist 预填研究，不重做。
+32. 用户不选任何选项、只输入想法 -> 进入收敛循环：复述理解、更新选项与推荐、继续一次一问直到明确决定，不被"追问一次"掐断。
 ## 13. 演进规则
 新增路由或 stage 前必须回答：
 1. 它解决的是新意图、新决策纪律，还是已有阶段实现细节？
