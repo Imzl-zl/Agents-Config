@@ -234,18 +234,6 @@ debug 不设置全局 `Readiness`。设计/原型中的失败解决后回原 dec
 - `defense-in-depth.md`：多层验证
 - `condition-based-waiting.md`：条件轮询替代任意 timeout
 
-## 与原 superpowers/systematic-debugging 的差异
-
-| 项 | 原 superpowers | 改造版 |
-|---|---|---|
-| Iron Law 措辞 | "NO FIXES WITHOUT ROOT CAUSE" | 改为"推荐 4 阶段，强制 3 次失败质疑架构" |
-| 强制程度 | 全部强制 | 仅"3 次失败质疑架构"强制，其余推荐 |
-| Red Flags | 11 条 | 9 条核心 |
-| Common Rationalizations | 8 条表 | 删除（与 Red Flags 重复） |
-| Real-World Impact | 数据段 | 删除（说服性内容） |
-| 核心流程 | 4 阶段 | 4 阶段（保留，核心价值） |
-| 3 次失败原则 | 有 | 保留并强化为强制规则 |
-
 ## 输出 delta
 
 ```text

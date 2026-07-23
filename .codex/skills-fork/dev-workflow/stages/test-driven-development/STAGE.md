@@ -21,10 +21,9 @@ Write the test first. Watch it fail. Write minimal code to pass.
 - Refactoring
 - Behavior changes
 
-**Exceptions (ask your human partner):**
-- Throwaway prototypes
-- Generated code
-- Configuration files
+**Exceptions (decided by the orchestrator, not by asking the user):**
+- Throwaway prototypes — never routed into this stage; the execution loop excludes them before loading.
+- Generated code / configuration files — the orchestrator exempts them per task boundary and validation, records an assumption, and escalates to the user only for irreversible or high-risk cases.
 
 Thinking "skip TDD just this once"? Stop. That's rationalization.
 
@@ -368,4 +367,4 @@ Production code → test exists and failed first
 Otherwise → not TDD
 ```
 
-No exceptions without your human partner's permission.
+Exceptions are granted only by the orchestrator's routing and boundary rules above and recorded in task notes — never assumed silently, never delegated to the user by default.

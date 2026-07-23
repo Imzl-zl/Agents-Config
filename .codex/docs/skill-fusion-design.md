@@ -52,7 +52,9 @@
 
 这同时满足“单入口”和宿主约束：user-only skill 不需要被模型二次调用，内部 stage 也不会在工作流外误触发。
 
-九份 legacy 工作流完整保留为 `REFERENCE.md`。其历史 frontmatter 只是参考正文，文件名不进入 skill discovery；对应 Codex invocation metadata 已移除，因此不构成第二套用户入口。
+九份 legacy 工作流保留为 `REFERENCE.md`（brainstorming、using-superpowers、subagent-driven-development、dispatching-parallel-agents 含少量 dev-workflow 适配注记，其余接近上游原文）。其历史 frontmatter 只是参考正文，文件名不进入 skill discovery；对应 Codex invocation metadata 已移除，因此不构成第二套用户入口。
+
+task-root ownership 与冷启动恢复细则位于入口旁的 `RECOVERY.md`，只在第一次写盘前或存在恢复候选信号时读取；它同样不参与 discovery。
 
 ### 4.2 决策分权，而不是用户画像
 
@@ -186,6 +188,8 @@ task_root / next / checkpoint
 
 每次等待用户、owner/prototype/debug/verification detour 和 stage return 前先更新 state。只有入口能设置 readiness；return point 在恢复原节点并合并成功后才清空。
 
+每次把 `awaiting` 置为非 `none` 前，向会话输出 ≤10 行压缩 state 块作为软 checkpoint。`DESIGN.md` 落盘由机械条件触发：fog 非空、两次用户等待后 frontier 仍未清空，或用户暂停/handoff；不依赖对"会话是否会中断"的预判。
+
 `return_point` 是单槽且 detour 不嵌套：非空时不得覆盖。当前 debugging/verification/design-drift 必须先返回、合并并恢复原 node，后续 detour 才能启动；detour 内发现的新失败作为当前 stage 的 evidence/gap 处理。
 
 Minimal 投影只含 `goal / intent / phase / readiness / next`，用于问答、评审和无需设计的 Transient。完整字段只在 Design/Discovery、prototype、跨会话或 detour 中启用；升级时再补齐。
@@ -239,6 +243,8 @@ id,plan_ref,goal,boundary,related_files,sync_targets,depends_on,status,validatio
 ### Epic
 
 父 `SUBTASKS.csv` 是协调真值，child `TODO.csv` 是子任务内部真值。父状态由 child truth 重算；不反向覆盖 child。
+
+`task_dir`（相对父 epic 目录）是 child 位置的唯一真值：新建 child 默认在 `tasks/` 下；Durable→Epic 升级不搬目录，既有 child 留在原位，`PROGRESS.md` 写 `Parent:` 回指父 epic，冷启动据此不把 child 当独立 task。
 
 ### 状态
 
@@ -331,3 +337,31 @@ Batch 不再是 shape：同质批量是 Durable/Epic 内的执行并行策略，
 5. 是否把可查事实重新问给用户？
 6. 是否有失败场景证明当前设计不足？
 不能明确回答时不新增 skill。入口保持唯一，stage 保持局部，状态保持单一。
+
+## 14. 附录：debug/verification stage 与上游 superpowers 的差异
+
+从 stage 运行文档迁入——运行时模型不需要这些对照，仅供设计比较。相关技能测试材料（CREATION-LOG、test-academic、test-pressure-1..3）已移至 `docs/legacy/systematic-debugging/`。
+
+### systematic-debugging
+
+| 项 | 原 superpowers | 改造版 |
+|---|---|---|
+| Iron Law 措辞 | "NO FIXES WITHOUT ROOT CAUSE" | 改为"推荐 4 阶段，强制 3 次失败质疑架构" |
+| 强制程度 | 全部强制 | 仅"3 次失败质疑架构"强制，其余推荐 |
+| Red Flags | 11 条 | 9 条核心 |
+| Common Rationalizations | 8 条表 | 保留 8 条（合理化识别） |
+| Real-World Impact | 数据段 | 删除（说服性内容） |
+| 核心流程 | 4 阶段 | 4 阶段（保留，核心价值） |
+| 3 次失败原则 | 有 | 保留并强化为强制规则 |
+
+### verification-before-completion
+
+| 项 | 原 superpowers | 改造版 |
+|---|---|---|
+| Iron Law 措辞 | "NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION" | 改为"强制：声称完成前必须运行验证命令并贴输出" |
+| 强制程度 | 全部强制 | 仅"声称完成前验证"强制，其余推荐 |
+| Common Failures | 7 条 | 7 条（保留，实用） |
+| Rationalization Prevention | 8 条表 | 删除（与 Red Flags 重复） |
+| Why This Matters | 失败记忆段 | 删除（说服性内容） |
+| 核心原则 | 证据先于声称 | 保留（核心价值） |
+| "Honesty" 段 | 有 | 删除（措辞过重） |

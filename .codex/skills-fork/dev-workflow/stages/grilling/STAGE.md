@@ -48,7 +48,7 @@ prototype 不夺走 owner。它回答后仍由用户确认 parent decision，除
 - 编排器维护唯一全局 frontier；本 stage 不和其他 stage 并行向用户提问。
 - 用户只转交某个领域时，仅修改该领域剩余 node 的 owner。
 - 局部领域结束不代表全局设计结束。
-- 每次用户回答后都更新 WorkflowState；长访谈或暂停时同步 `DESIGN.md`，不能等整个 grilling 结束才记录。
+- 每次用户回答后都更新 WorkflowState；命中入口的机械落盘条件（fog 非空、两次用户等待后 frontier 未清空、用户暂停）时同步 `DESIGN.md`，不能等整个 grilling 结束才记录。
 
 ## 共识确认
 

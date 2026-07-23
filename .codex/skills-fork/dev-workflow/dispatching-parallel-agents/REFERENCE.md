@@ -1,4 +1,4 @@
-<!-- Inert legacy reference. Original content follows verbatim; do not interpret its frontmatter as invocation metadata. -->
+<!-- Inert legacy reference for design comparison. May include dev-workflow adaptation notes; not discoverable, not invocable. Do not interpret the frontmatter below as invocation metadata. -->
 
 ---
 name: dispatching-parallel-agents

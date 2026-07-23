@@ -27,7 +27,7 @@
 
 ### Epic
 
-读取 `EPIC.md`、`SUBTASKS.csv`、父 `PROGRESS.md`，再读取当前 dependency-ready 子任务目录。父 CSV 是子任务状态真值，子目录 CSV 是子任务内部状态真值。
+读取 `EPIC.md`、`SUBTASKS.csv`、父 `PROGRESS.md`，再按其 `task_dir` 读取当前 dependency-ready 子任务目录；child 不一定在父目录下（升级自 Durable 的 child 留在原位）。父 CSV 是子任务状态真值，子目录 CSV 是子任务内部状态真值。
 父子状态重算规则：子任务只由子目录的 TODO.csv 决定；父项为 `FAILED` 当任一 child 为 `FAILED`，为 `IN_PROGRESS` 当没有失败但仍有未完成 child，为 `DONE` 仅当所有 child 都 DONE 且父级 final validation 通过。恢复时若父 CSV 与 child CSV 不一致，按 child 真值重算父项，不反向覆盖 child。
 
 ## 开工前检查
@@ -88,15 +88,13 @@ TODO → IN_PROGRESS → DONE
 
 ### Durable → Epic
 
-当一个 TODO 开始承载多个独立 deliverable 或依赖链时：
+当一个 TODO 开始承载多个独立 deliverable 或依赖链时，升级不搬目录：`task_dir` 是 child 位置的唯一真值，既有 Durable 留在原位。
 
 1. 创建父 `EPIC.md`、`SUBTASKS.csv`、`PROGRESS.md`，父 PROGRESS 写 `FinalizationStatus: active`。
-2. 将现有 Durable 目录完整移动到 `.tasks/<epic>/tasks/<child>/`，保留 TODO 行状态、`plan_ref`、SPEC、PROGRESS 和 raw 资料。
-3. 在父 `SUBTASKS.csv` 写入该 child 的准确相对 `task_dir`，并把原目标、依赖和当前状态复制为父协调行。
-4. 重写 child `PROGRESS.md` 的 Truth、相关 raw/SPEC 相对路径和恢复提示，使冷启动路径全部指向新位置。
-5. 将剩余 deliverable 建成独立 child，并声明 `depends_on`；新 child 从 `TODO` 开始，其 PROGRESS 写 `FinalizationStatus: active`。
-6. 按父子状态重算规则初始化父 `SUBTASKS.csv` 与父 `PROGRESS.md`。
-7. 父 `SUBTASKS.csv` 成为协调真值，child TODO.csv 仍是各 child 内部真值。
+2. 在父 `SUBTASKS.csv` 为既有 Durable 写协调行：`task_dir` 相对父 epic 目录解析（升级 child 通常为 `../<原任务目录>`，允许 `../` 但不得指向 task_root 之外），复制原目标、依赖和当前状态；child 的 TODO 行状态、`plan_ref`、SPEC、PROGRESS 和 raw 资料原样不动。
+3. 在该 child 的 `PROGRESS.md` 恢复区加一行 `Parent: <父 epic 相对路径>`；冷启动据此把它当作 child，从父 `SUBTASKS.csv` 恢复，而不是独立 task。
+4. 将剩余 deliverable 建成新 child（默认放在 `.tasks/<epic>/tasks/<child>/`），声明 `depends_on`；新 child 从 `TODO` 开始，其 PROGRESS 写 `FinalizationStatus: active` 和 `Parent:`。
+5. 按父子状态重算规则初始化父 `SUBTASKS.csv` 与父 `PROGRESS.md`；父 CSV 成为协调真值，child TODO.csv 仍是各 child 内部真值。
 
 ## 恢复输出
 

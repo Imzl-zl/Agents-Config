@@ -115,6 +115,8 @@ id,goal,task_type,depends_on,task_dir,status,validation,completed_at,notes
 
 每个子任务使用自己的 Durable 工件。父项只有在子任务最终验证完成后才能 DONE。
 
+`task_dir` 相对父 epic 目录解析，是 child 位置的唯一真值：规划期新建 child 默认放在 `tasks/` 下；升级自 Durable 的 child 留在原位（通常为 `../<原任务目录>`），允许 `../` 但不得指向 task_root 之外。每个 child 的 `PROGRESS.md` 都写 `Parent: <父 epic 相对路径>`，冷启动据此不把 child 当独立 task。
+
 ## 计划流程
 
 进入以下步骤前先确认 task root marker 已存在且版本匹配；自定义根还必须能从项目根 `.dev-workflow/config.yaml` 重新发现。

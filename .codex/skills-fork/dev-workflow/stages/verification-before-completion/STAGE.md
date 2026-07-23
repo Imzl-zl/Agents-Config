@@ -141,15 +141,3 @@ StageStatus: verified | not-verified
 **验证无捷径。**
 
 跑命令。读输出。**然后**才声称结果。
-
-## 与原 superpowers/verification-before-completion 的差异
-
-| 项 | 原 superpowers | 改造版 |
-|---|---|---|
-| Iron Law 措辞 | "NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION" | 改为"强制：声称完成前必须运行验证命令并贴输出" |
-| 强制程度 | 全部强制 | 仅"声称完成前验证"强制，其余推荐 |
-| Common Failures | 7 条 | 7 条（保留，实用） |
-| Rationalization Prevention | 8 条表 | 删除（与 Red Flags 重复） |
-| Why This Matters | 失败记忆段 | 删除（说服性内容） |
-| 核心原则 | 证据先于声称 | 保留（核心价值） |
-| "Honesty" 段 | 有 | 删除（措辞过重） |

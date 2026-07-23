@@ -45,6 +45,7 @@
 - The integrated heavy workflow is explicit-only: start it with `/dev-workflow` when that workflow is intended.
 - Invoke it once. Its active orchestration frame reads supporting stages; users do not invoke stage commands.
 - Ordinary questions, explanations, and lightweight interactions must not be auto-captured by the heavy workflow.
+- Outside an active `/dev-workflow` frame, do not create task-tracking files (TODO/SPEC/PROGRESS/CSV or similar); use the built-in plan tool for ordinary planning. Persistent trackers belong to the workflow's task root.
 
 ## Structural Fixes
 
