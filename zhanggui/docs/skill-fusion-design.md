@@ -2,12 +2,11 @@
 
 **状态：** v0.4 权威设计文档  
 **日期：** 2026-07-22  
-**实现入口：** [`zhanggui/`](../README.md)  
-**目录边界：** [`.codex/README.md`](../../.codex/README.md)
+**实现入口：** [`zhanggui/`](../README.md)
 
 ## 1. 背景
 
-原工作区同时存在 Superpowers、taskmaster、todo-list-csv、模型内置 plan 和多套 UI 设计方式。单独使用都有价值，同时启用会产生：
+原工作区同时存在多套工作流 skill、任务清单工具、模型内置 plan 和多套 UI 设计方式。单独使用都有价值，同时启用会产生：
 
 1. 多个入口竞争。
 2. 用户不懂某领域时，模型仍把可查事实和设计问题逐项问回用户。
@@ -20,7 +19,7 @@
 
 - 用户只需启动 `/zhanggui` 一次。
 - 内部路由遵守宿主真实 invocation 规则。
-- 最终 runtime plugin 只发现一个 `zhanggui` SKILL；legacy 内容完整保留为不可发现参考。
+- 最终 runtime plugin 只发现一个 `zhanggui` SKILL，不暴露第二入口。
 - 模型默认使用代码、工具、文档和同类产品消除事实缺口。
 - 决策 owner 可按业务、技术、UI 等领域分别设置。
 - 严格 Owner/grill-me 路径保持一次一问、用户决策、明确共识。
@@ -32,7 +31,7 @@
 
 - 不替用户决定业务规则、安全边界或不可逆迁移。
 - 不强制每个任务创建 spec、CSV、Epic 或 HTML 原型。
-- 不同时运行 Superpowers 和 zhanggui 两套默认编排。
+- 不同时运行两套默认强编排入口。
 - 不把 prototype 直接升级为未经正式流程的生产实现。
 - 不把 supporting stage 暴露成额外 slash command。
 - 不用文件行数替代行为验证；Skill/设计文档不设 300 行硬上限。
@@ -52,11 +51,9 @@
 
 这同时满足“单入口”和宿主约束：user-only skill 不需要被模型二次调用，内部 stage 也不会在工作流外误触发。
 
-九份 legacy 工作流不再随 fork 保留副本：上游以仓库根 gitignored 克隆（`superpowers/`、`skills/`）为参考源，fork 期的适配副本存于 git 历史。它们从未参与 skill discovery，也不构成第二套用户入口。
+task-root ownership 与冷启动恢复细则位于入口旁的 `RECOVERY.md`，只在第一次写盘前或存在恢复候选信号时读取；它不参与 discovery。
 
-task-root ownership 与冷启动恢复细则位于入口旁的 `RECOVERY.md`，只在第一次写盘前或存在恢复候选信号时读取；它同样不参与 discovery。
-
-保留能力按需 stage 化：requesting/receiving-code-review 融合为 `stages/code-review/`（质量轴 + 忠实轴双向审查），finishing-a-development-branch、using-git-worktrees、dispatching-parallel-agents 各提升为按需 stage。路由导航型架构下未加载的 stage 不占上下文，保留即近零成本。subagent-driven-development 保持 reference：整体移植会创建第二套执行真值（演进规则 3），其"每任务审查 + 派发"理念已并入 code-review 与 dispatching stage。
+`stages/code-review/` 做质量轴 + 忠实轴双向审查；finishing-a-development-branch、using-git-worktrees、dispatching-parallel-agents 是按需 stage。路由导航型架构下未加载的 stage 不占上下文，保留即近零成本。
 
 ### 4.2 决策分权，而不是用户画像
 
@@ -280,9 +277,8 @@ DONE 必须有当前 validation 的新鲜证据。
 - plugin 只发现 `zhanggui/SKILL.md`；它同时设置 Claude `disable-model-invocation: true` 与 Codex `allow_implicit_invocation: false`。
 - skill 目录自包含（`stages/`、`RECOVERY.md` 在其内部）：同一份文件既作插件安装，也可整体复制到宿主 skills 目录作裸 skill 使用。Agent Skills 的三级渐进加载（启动只注入 frontmatter → 调用才加载 SKILL.md 正文 → 支撑文件按需 Read）保证未路由的 stage 不进上下文；两种形态不得同时启用。
 - explicit-only 是有意取舍：避免普通问答被重工作流接管。浅层 model router 无法调用 user-only 主入口，因此不新增第二入口。
-- 包括 TDD 在内的十二个主线阶段是 `STAGE.md`，不参与 discovery；legacy 工作流不保留 fork 内副本，参考走根目录克隆与 git 历史。
-- taskmaster/todo-list-csv 和根目录 superpowers/skills 是上游参考。不得另行启用 Superpowers 与 zhanggui 两个强入口。
-- 参考源不被运行时调用或修改。
+- 包括 TDD 在内的十二个主线阶段是 `STAGE.md`，不参与 discovery。
+- 不得同时启用另一套默认强编排入口。
 
 ### 10.1 Batch 与任务命名空间
 
@@ -336,7 +332,7 @@ Batch 不再是 shape：同质批量是 Durable/Epic 内的执行并行策略，
 10. 部分计划 -> readiness check，不直接执行。
 11. 短改动 -> Transient，无持久 CSV。
 12. 高风险/跨会话 -> Durable；多 deliverable -> Epic。
-13. 生产实现 -> TDD；throwaway prototype 排除。
+13. 生产实现 -> TDD；throwaway prototype 排除；原型逻辑 lift 进生产走受控入口——先在生产模块写失败测试再接入，不以原型期验证抵扣。
 14. 完成声称 -> verification 使用新鲜证据。
 15. 运行 plugin discovery -> 只发现 `/zhanggui`，无其他入口。
 16. Transient 小改 -> 只建立 minimal state，不生成空 decision graph。
@@ -369,43 +365,3 @@ Batch 不再是 shape：同质批量是 Durable/Epic 内的执行并行策略，
 5. 是否把可查事实重新问给用户？
 6. 是否有失败场景证明当前设计不足？
 不能明确回答时不新增 skill。入口保持唯一，stage 保持局部，状态保持单一。
-
-## 14. 附录：debug/verification stage 与上游 superpowers 的差异
-
-从 stage 运行文档迁入——运行时模型不需要这些对照，仅供设计比较。相关技能测试材料（CREATION-LOG、test-academic、test-pressure-1..3）已移至 `docs/legacy/systematic-debugging/`。
-
-### systematic-debugging
-
-| 项 | 原 superpowers | 改造版 |
-|---|---|---|
-| Iron Law 措辞 | "NO FIXES WITHOUT ROOT CAUSE" | 改为"推荐 4 阶段，强制 3 次失败质疑架构" |
-| 强制程度 | 全部强制 | 仅"3 次失败质疑架构"强制，其余推荐 |
-| Red Flags | 11 条 | 9 条核心 |
-| Common Rationalizations | 8 条表 | 保留 8 条（合理化识别） |
-| Real-World Impact | 数据段 | 删除（说服性内容） |
-| 核心流程 | 4 阶段 | 4 阶段（保留，核心价值） |
-| 3 次失败原则 | 有 | 保留并强化为强制规则 |
-
-### verification-before-completion
-
-| 项 | 原 superpowers | 改造版 |
-|---|---|---|
-| Iron Law 措辞 | "NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION" | 改为"强制：声称完成前必须运行验证命令并贴输出" |
-| 强制程度 | 全部强制 | 仅"声称完成前验证"强制，其余推荐 |
-| Common Failures | 7 条 | 7 条（保留，实用） |
-| Rationalization Prevention | 8 条表 | 删除（与 Red Flags 重复） |
-| Why This Matters | 失败记忆段 | 删除（说服性内容） |
-| 核心原则 | 证据先于声称 | 保留（核心价值） |
-| "Honesty" 段 | 有 | 删除（措辞过重） |
-
-### test-driven-development
-
-| 项 | 原 superpowers | 改造版 |
-|---|---|---|
-| Iron Law | "NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST" | 保留（核心价值） |
-| Why Order Matters 长文 | 4 段散文论述 | 删除（与 Common Rationalizations 表逐条重复，同 verification 的裁剪标准） |
-| Common Rationalizations | 11 条表 | 保留并吸收长文要点（12 条） |
-| Red Flags | 13 条 | 保留 |
-| Red-Green-Refactor 流程/示例/检查单/When Stuck | 有 | 保留（核心价值） |
-| 豁免规则 | 无明确归属 | 由编排器按 task boundary 豁免并记录，不推给用户 |
-| 语言 | 英文 | 中文化，术语与代码保留英文 |

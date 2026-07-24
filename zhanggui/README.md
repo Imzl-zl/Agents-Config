@@ -1,11 +1,8 @@
 # Zhanggui（掌柜）v0.4
 
-面向强模型、对非专业用户友好的单入口开发工作流。运行实现位于本目录；taskmaster、todo-list-csv 和其他上游材料只是隔离参考源，不是运行依赖。
+面向强模型、对非专业用户友好的单入口开发工作流。运行实现位于本目录，自包含、无外部依赖。
 
 > 本 README 只是导览，不参与运行，也不复述规则细节——避免出现第三份会漂移的"真值"。运行契约以 [`skills/zhanggui/SKILL.md`](skills/zhanggui/SKILL.md) 与各 `STAGE.md` 为准；完整设计论证见 [Skill 融合工作流设计](docs/skill-fusion-design.md)。
-
-- 设计理念：[Skill 融合工作流设计](docs/skill-fusion-design.md)
-- 目录边界：[`.codex/README.md`](../.codex/README.md)
 
 ## 快速使用
 
@@ -35,9 +32,8 @@
 zhanggui/
 ├── .codex-plugin/plugin.json     # Codex plugin manifest（skills root -> ./skills/）
 ├── README.md
-├── docs/                         # 设计文档与 legacy 测试材料
-│   ├── skill-fusion-design.md
-│   └── legacy/systematic-debugging/
+├── docs/                         # 设计文档
+│   └── skill-fusion-design.md
 └── skills/                       # plugin skills root
     └── zhanggui/                 # 唯一可发现入口 = 自包含可移植 skill
         ├── SKILL.md
@@ -65,7 +61,7 @@ skill 目录 `skills/zhanggui/` 是自包含的可移植单元，无需构建：
 1. **插件形态**：宿主加载 `.codex-plugin/plugin.json`（skills root 指向 `./skills/`）。
 2. **裸 skill 形态**：把 `skills/zhanggui/` 整个文件夹复制到宿主 skills 目录（`~/.claude/skills/zhanggui/`、`~/.agents/skills/zhanggui/` 或 Codex 对应目录）即可用 `/zhanggui`。
 
-不会全量加载：Agent Skills 是三级渐进加载——启动只注入 frontmatter 的 name/description 一两行；调用 `/zhanggui` 时才加载 SKILL.md 正文；`stages/` 与 `RECOVERY.md` 只有被导航表按需 Read 才进上下文。这也是官方大型 skill 的标准组织方式。同一 skill 不要以两种形态同时启用。
+不会全量加载：Agent Skills 是三级渐进加载——启动只注入 frontmatter 的 name/description 一两行；调用 `/zhanggui` 时才加载 SKILL.md 正文；`stages/` 与 `RECOVERY.md` 只有被导航表按需 Read 才进上下文。这也是官方大型 skill 的标准组织方式。同一 skill 不要以两种形态同时启用，也不要与另一套默认强编排入口同时启用。
 
 ### 宿主调用模型
 
@@ -94,27 +90,19 @@ skill 目录 `skills/zhanggui/` 是自包含的可移植单元，无需构建：
 
 与模型内置 plan 的关系：模型 plan 保持短（目标与即时进度），磁盘 tracker 只补执行细节（boundary、related_files、sync_targets、depends_on、validation），会话 plan 是磁盘 CSV 的镜像投影。细节见 `stages/writing-plans/STAGE.md`「与模型 plan 的互补」。
 
-## Runtime 与参考资料
+## Runtime
 
 ### 唯一可发现入口
 
 - `zhanggui`
 
-### 上游参考与能力映射
-
-上游参考不随 fork 保留副本：原版以仓库根 gitignored 克隆（`superpowers/`、`skills/`）为准，fork 期的适配副本存于 git 历史；`.codex/reference-skills/` 另保留 taskmaster、todo-list-csv 快照。以上均只读、不参与运行。
-
-上游能力在运行实现中的归宿：requesting/receiving-code-review 融合为 `stages/code-review/`；finishing-a-development-branch、using-git-worktrees、dispatching-parallel-agents 各有对应 stage；brainstorming、using-superpowers 被入口的设计路由取代；subagent-driven-development 未整体移植——那会创建第二套执行真值（违反设计文档演进规则 3），其"每任务审查 + 派发"理念已并入 code-review 与 dispatching 两个 stage；writing-skills 属维护方法论，随上游克隆查阅。brainstorming 的 server 方案未启用——运行时 UI 原型使用 `stages/prototype/UI.md` 的无 server `?variant=` 方案。
-
 ### 任务目录与迁移
 
-v0.4 默认根仍为 `.tasks/`。不存在/空目录可采用并创建 `.zhanggui-root`；非空目录只有 marker 版本匹配才自动视为本工作流所有。默认根不可用时，项目根 `.zhanggui/config.yaml` 可用 `version` + 项目内相对 `task_root` 声明自定义根；否则使用确定性后备 `.zhanggui/tasks/`。完整细则见入口旁 [`RECOVERY.md`](skills/zhanggui/RECOVERY.md)。本设计仓库没有真实 `.codex-tasks/` 任务，因此不做虚构迁移；已有项目只能显式采用、一次性导入或保留隔离，禁止静默合并和双写。
+v0.4 默认根仍为 `.tasks/`。不存在/空目录可采用并创建 `.zhanggui-root`；非空目录只有 marker 版本匹配才自动视为本工作流所有。默认根不可用时，项目根 `.zhanggui/config.yaml` 可用 `version` + 项目内相对 `task_root` 声明自定义根；否则使用确定性后备 `.zhanggui/tasks/`。完整细则见入口旁 [`RECOVERY.md`](skills/zhanggui/RECOVERY.md)。已有项目的旧任务目录只能显式采用、一次性导入或保留隔离，禁止静默合并和双写。
 
 ### 文档维护
 
-生产代码的文件行数可作为拆分信号；Skill、STAGE、设计文档和参考资料不设 300 行硬上限。必要时按职责做 progressive disclosure，但不得为满足数字删除约束、示例或可读空白。
-
-恢复上游 Superpowers plugin 前必须先停用 zhanggui；不要同时启用两个强入口。
+生产代码的文件行数可作为拆分信号；Skill、STAGE 和设计文档不设 300 行硬上限。必要时按职责做 progressive disclosure，但不得为满足数字删除约束、示例或可读空白。
 
 ## 验收场景
 

@@ -17,7 +17,7 @@
   "interface": {
     "displayName": "Zhanggui（掌柜）",
     "shortDescription": "一次调用完成路由、设计、计划、执行与验证",
-    "longDescription": "用户只需调用 /zhanggui。plugin 只发现这一个入口；入口在同一编排 frame 内维护可恢复 WorkflowState，按决策 owner 和 UI mode 读取 supporting stages。短任务使用最小会话状态，跨会话设计使用 DESIGN checkpoint，物化后由 SPEC/EPIC 接管设计真值，执行按 Transient/Durable/Epic 保持单一状态真值。legacy 工作流不随本插件分发，参考走上游克隆与 git 历史。",
+    "longDescription": "用户只需调用 /zhanggui。plugin 只发现这一个入口；入口在同一编排 frame 内维护可恢复 WorkflowState，按决策 owner 和 UI mode 读取 supporting stages。短任务使用最小会话状态，跨会话设计使用 DESIGN checkpoint，物化后由 SPEC/EPIC 接管设计真值，执行按 Transient/Durable/Epic 保持单一状态真值。",
     "developerName": "zhanglu",
     "category": "Developer Tools",
     "capabilities": [
@@ -26,8 +26,8 @@
       "Write"
     ],
     "defaultPrompt": [
-      "我有一个想法，请用 /zhanggui 先判断哪些由你决定、哪些需要问我。",
-      "Use /zhanggui to route and complete this request."
+      "先输入 /zhanggui 启动工作流，再直接描述你的想法或问题。",
+      "Type /zhanggui first, then describe your goal in plain language."
     ],
     "brandColor": "#10B981",
     "screenshots": []

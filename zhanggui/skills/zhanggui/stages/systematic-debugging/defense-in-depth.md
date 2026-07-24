@@ -93,7 +93,7 @@ When you find a bug:
 3. **Add validation at each layer** - Entry, business, environment, debug
 4. **Test each layer** - Try to bypass layer 1, verify layer 2 catches it
 
-## Example from Session
+## Example: Empty projectDir
 
 Bug: Empty `projectDir` caused `git init` in source code
 

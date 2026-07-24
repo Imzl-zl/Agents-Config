@@ -24,7 +24,7 @@ disable-model-invocation: true
 - 进入阶段时只读取对应的 `stages/<stage>/STAGE.md`；阶段结束时返回 state delta，由当前编排 frame 合并。task-root 采用与冷启动恢复细则在需要时读取同目录 `RECOVERY.md`，不常驻。
 - “返回编排器”表示继续执行已加载的本文件，绝不再次 invoke `/zhanggui`，也不要求用户输入下一条 slash command。
 - stage 不直接调用 sibling stage；它只能返回 `StageStatus` 和下一阶段建议，实际路由由本编排器决定。
-- `.codex/reference-skills/` 和仓库根目录的上游克隆只读，不参与运行；本 skill 不依赖任何 skill 目录之外的文件。
+- 本 skill 自包含：不依赖、不引用 skill 目录之外的任何文件。
 - explicit-only 是有意取舍：重工作流不会吞掉普通问答；用户需要在开始时调用一次 `/zhanggui`。不增加无法调用 user-only 入口的浅层 auto-router。
 
 ## WorkflowState - 唯一设计状态
@@ -35,7 +35,7 @@ disable-model-invocation: true
 version: zhanggui/v0.4
 goal: 一句话目标
 intent: resume | answer | research | review | bug | executable-plan | partial-plan | clear-change | idea | fog
-phase: route | discovery | design | prototype | plan | execute | debug | verify | stop
+phase: route | discovery | design | prototype | plan | execute | debug | verify | stop   # route 兼作编排器层直接处理（问答/研究/评审/可执行性检查）的工作 phase，这类工作不进入专门阶段，完成后进 stop
 constraints: []
 non_goals: []              # 本 effort 明确排除的范围；物化时进入 SPEC/EPIC 的 Non-goals
 decision_mode: Assisted | Owner | Mixed

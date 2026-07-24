@@ -66,7 +66,7 @@
 
 ### 7. 捕获答案和原型
 
-原型答完问题，捕获答案，再按 [STAGE](STAGE.md) 描述返回父决策 delta。逻辑专属映射：验证过的 reducer/机器/函数集 lift 进真实模块（决策吸收）；TUI 壳随 throwaway 分支保留原型作原始资料。
+原型答完问题，捕获答案，再按 [STAGE](STAGE.md) 描述返回父决策 delta。逻辑专属映射：验证过的 reducer/机器/函数集 lift 进真实模块（决策吸收）；TUI 壳随 throwaway 分支保留原型作原始资料。lift 不豁免 TDD：接线前先在生产模块按目标接口写失败测试（Red 因模块尚未接入而真实失败），再引入被 lift 的模块使其通过（Green）；原型期的手动驱动不替代测试。
 
 ## Anti-patterns
 

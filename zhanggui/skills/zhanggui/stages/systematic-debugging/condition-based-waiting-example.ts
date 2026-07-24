@@ -135,7 +135,7 @@ export function waitForEventMatch(
   });
 }
 
-// Usage example from actual debugging session:
+// Usage example:
 //
 // BEFORE (flaky):
 // ---------------

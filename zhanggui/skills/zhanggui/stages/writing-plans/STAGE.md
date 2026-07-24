@@ -118,7 +118,7 @@ id,goal,task_type,depends_on,task_dir,status,validation,completed_at,notes
 
 ## 计划流程
 
-进入以下步骤前先确认 task root marker 已存在且版本匹配；自定义根还必须能从项目根 `.zhanggui/config.yaml` 重新发现。
+进入以下步骤前复核 task root：ownership 由编排器按 `RECOVERY.md` 建立，本 stage 只验证 marker 存在且版本匹配、自定义根能从项目根 `.zhanggui/config.yaml` 重新发现；复核失败返回 blocked，不在本 stage 建立 ownership。
 
 1. 读取 WorkflowState，确认 `open_nodes` 与 `fog` 为空；存在 user-owned decisions 时还要确认 `consensus: confirmed`。
 2. 确认编排器传入的 readiness 是 `durable-plan` 或 `epic-plan`；Transient 不在本 stage 落盘。
