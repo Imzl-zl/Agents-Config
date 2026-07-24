@@ -1,6 +1,6 @@
 # Recovery - Task Root Ownership 与冷启动恢复细则
 
-这是 `/zhanggui` 编排器的内部支持文档，不是独立 skill，也不参与 discovery。只在两种情况下读取：第一次写盘前建立 task-root ownership，或冷启动扫描发现恢复候选信号。真值优先序的一句话版本保留在 SKILL.md；本文件是完整流程。
+这是 `/zhanggui` 编排器的内部支持文档，不是独立 skill。只在两种情况下读取：第一次写盘前建立 task-root ownership，或冷启动扫描发现恢复候选信号。真值优先序的一句话版本保留在 SKILL.md；本文件是完整流程。
 
 ## Task root ownership
 

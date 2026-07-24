@@ -20,12 +20,9 @@ disable-model-invocation: true
 
 ## 宿主调用契约
 
-- 本文件是唯一默认 user-invoked 入口，目录名和 frontmatter 名都为 `zhanggui`。
 - 进入阶段时只读取对应的 `stages/<stage>/STAGE.md`；阶段结束时返回 state delta，由当前编排 frame 合并。task-root 采用与冷启动恢复细则在需要时读取同目录 `RECOVERY.md`，不常驻。
 - “返回编排器”表示继续执行已加载的本文件，绝不再次 invoke `/zhanggui`，也不要求用户输入下一条 slash command。
 - stage 不直接调用 sibling stage；它只能返回 `StageStatus` 和下一阶段建议，实际路由由本编排器决定。
-- 本 skill 自包含：不依赖、不引用 skill 目录之外的任何文件。
-- explicit-only 是有意取舍：重工作流不会吞掉普通问答；用户需要在开始时调用一次 `/zhanggui`。不增加无法调用 user-only 入口的浅层 auto-router。
 
 ## WorkflowState - 唯一设计状态
 
